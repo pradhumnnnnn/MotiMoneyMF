@@ -1,1 +1,15 @@
-node_modules
+# Node modules
+node_modules/
+
+# Build outputs
+android/.gradle/
+android/build/
+android/app/build/
+ios/build/
+ios/Pods/
+
+# Generated files
+*.apk
+*.aab
+*.keystore
+*.log
