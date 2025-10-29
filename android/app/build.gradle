@@ -20,8 +20,8 @@ android {
         applicationId "com.motimoney.mf"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3          
-        versionName "2.0"     
+        versionCode 3
+        versionName "2.0"
     }
 
     signingConfigs {
@@ -32,12 +32,16 @@ android {
             keyPassword 'android'
         }
 
+        // ✅ Release signing setup (linked to gradle.properties)
         release {
             if (project.hasProperty("MYAPP_UPLOAD_STORE_FILE")) {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
                 keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            } else {
+                // fallback for safety if props missing
+                println("⚠️ Release keystore properties not found!")
             }
         }
     }
@@ -46,7 +50,9 @@ android {
         debug {
             signingConfig signingConfigs.debug
         }
+
         release {
+            // ✅ Make sure your release build is signed with your keystore
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources enableProguardInReleaseBuilds
@@ -54,7 +60,7 @@ android {
         }
     }
 
-    // Optional: Enables source maps for Hermes debugging (can be removed in production)
+    // Optional: fixes duplicate native libs issue
     packagingOptions {
         pickFirst '**/armeabi-v7a/libc++_shared.so'
         pickFirst '**/x86/libc++_shared.so'
