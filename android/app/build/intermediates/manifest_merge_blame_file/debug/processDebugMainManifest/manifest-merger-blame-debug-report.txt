@@ -1,0 +1,312 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.motimoney.mf"
+4    android:versionCode="3"
+5    android:versionName="2.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="36" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:3:5-67
+11-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:3:22-64
+12    <uses-permission android:name="android.permission.VIBRATE" />
+12-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:4:5-66
+12-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:4:22-63
+13    <uses-permission android:name="android.permission.USE_BIOMETRIC" /> <!-- Scoped storage permissions -->
+13-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:5:5-72
+13-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:5:22-69
+14    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+14-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:8:5-76
+14-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:8:22-73
+15    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+15-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:9:5-75
+15-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:9:22-72
+16    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+16-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:10:5-75
+16-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:10:22-72
+17    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+17-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:11:5-80
+17-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:11:22-77
+18
+19    <queries>
+19-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-17:15
+20        <intent>
+20-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:9-10:18
+21            <action android:name="org.chromium.intent.action.PAY" />
+21-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-69
+21-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:21-66
+22        </intent>
+23        <intent>
+23-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:9-13:18
+24            <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
+24-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-81
+24-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:21-78
+25        </intent>
+26        <intent>
+26-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:9-16:18
+27            <action android:name="org.chromium.intent.action.UPDATE_PAYMENT_DETAILS" />
+27-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:13-88
+27-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:21-85
+28        </intent>
+29        <intent>
+29-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-12:18
+30            <action android:name="android.support.customtabs.action.CustomTabsService" />
+30-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-90
+30-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:21-87
+31        </intent>
+32    </queries>
+33
+34    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+34-->[:react-native-biometrics] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-biometrics/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-74
+34-->[:react-native-biometrics] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-biometrics/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:22-71
+35    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- Required to access Google Play Licensing -->
+35-->[:react-native-fs] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-fs/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-81
+35-->[:react-native-fs] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-fs/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:22-78
+36    <uses-permission android:name="com.android.vending.CHECK_LICENSE" />
+36-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-73
+36-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:22-70
+37    <!--
+38         Required to keep CPU alive while downloading files
+39        (NOT to keep screen awake)
+40    -->
+41    <uses-permission android:name="android.permission.WAKE_LOCK" />
+41-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:5-68
+41-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:22-65
+42    <!--
+43         Required to poll the state of the network connection
+44        and respond to changes
+45    -->
+46    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Required to check whether Wi-Fi is enabled -->
+46-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:5-79
+46-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:22-76
+47    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+47-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:5-76
+47-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:22-73
+48    <!--
+49    This manifest file is used only by Gradle to configure debug-only capabilities
+50    for React Native Apps.
+51    -->
+52    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+52-->[com.facebook.react:react-android:0.80.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/89ee2d71482aa90a74abf94579aa4b78/transformed/react-android-0.80.0-debug/AndroidManifest.xml:16:5-78
+52-->[com.facebook.react:react-android:0.80.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/89ee2d71482aa90a74abf94579aa4b78/transformed/react-android-0.80.0-debug/AndroidManifest.xml:16:22-75
+53
+54    <permission
+54-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
+55        android:name="com.motimoney.mf.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+55-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:23:9-81
+56        android:protectionLevel="signature" />
+56-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:24:9-44
+57
+58    <uses-permission android:name="com.motimoney.mf.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+58-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:26:5-97
+58-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
+59    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
+59-->[com.android.installreferrer:installreferrer:1.1.2] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/ecc4ca859580373b5f8f724a1493848b/transformed/installreferrer-1.1.2/AndroidManifest.xml:9:5-110
+59-->[com.android.installreferrer:installreferrer:1.1.2] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/ecc4ca859580373b5f8f724a1493848b/transformed/installreferrer-1.1.2/AndroidManifest.xml:9:22-107
+60
+61    <application
+61-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:13:5-43:19
+62        android:name="com.motimoney.mf.MainApplication"
+62-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:14:9-40
+63        android:allowBackup="false"
+63-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:18:9-36
+64        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+64-->[androidx.core:core:1.16.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/6a8eda32708daa4f238d4c2804e6afbc/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
+65        android:debuggable="true"
+66        android:extractNativeLibs="false"
+67        android:icon="@mipmap/ic_launcher"
+67-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:16:9-43
+68        android:label="@string/app_name"
+68-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:15:9-41
+69        android:roundIcon="@mipmap/ic_launcher_round"
+69-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:17:9-54
+70        android:supportsRtl="true"
+70-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:20:9-35
+71        android:theme="@style/AppTheme"
+71-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:19:9-40
+72        android:usesCleartextTraffic="true" >
+72-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/debug/AndroidManifest.xml:6:9-44
+73        <activity
+73-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:22:9-42:20
+74            android:name="com.motimoney.mf.MainActivity"
+74-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:23:13-41
+75            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+75-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:26:13-122
+76            android:exported="true"
+76-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:29:13-36
+77            android:label="@string/app_name"
+77-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:24:13-45
+78            android:launchMode="singleTask"
+78-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:27:13-44
+79            android:screenOrientation="portrait"
+79-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:25:13-49
+80            android:windowLayoutInDisplayCutoutMode="shortEdges"
+80-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:30:13-65
+81            android:windowSoftInputMode="adjustResize" >
+81-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:28:13-55
+82
+83            <!-- Optional: translucent status bar -->
+84            <meta-data
+84-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:33:13-35:40
+85                android:name="android.window.translucentStatus"
+85-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:34:17-64
+86                android:value="true" />
+86-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:35:17-37
+87
+88            <intent-filter>
+88-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:37:13-40:29
+89                <action android:name="android.intent.action.MAIN" />
+89-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:38:17-69
+89-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:38:25-66
+90
+91                <category android:name="android.intent.category.LAUNCHER" />
+91-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:39:17-77
+91-->/Users/pradhumnnn/Desktop/MotiMoneyMF/android/app/src/main/AndroidManifest.xml:39:27-74
+92            </intent-filter>
+93        </activity>
+94
+95        <provider
+95-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:20:9-28:20
+96            android:name="com.reactnativecommunity.webview.RNCWebViewFileProvider"
+96-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:13-83
+97            android:authorities="com.motimoney.mf.fileprovider"
+97-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:22:13-64
+98            android:exported="false"
+98-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:13-37
+99            android:grantUriPermissions="true" >
+99-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:24:13-47
+100            <meta-data
+100-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:25:13-27:63
+101                android:name="android.support.FILE_PROVIDER_PATHS"
+101-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:17-67
+102                android:resource="@xml/file_provider_paths" />
+102-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:27:17-60
+103        </provider>
+104        <provider
+104-->[:react-native-file-viewer] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-file-viewer/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:9-16:20
+105            android:name="com.vinzscam.reactnativefileviewer.FileProvider"
+105-->[:react-native-file-viewer] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-file-viewer/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-75
+106            android:authorities="com.motimoney.mf.provider"
+106-->[:react-native-file-viewer] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-file-viewer/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-60
+107            android:exported="false"
+107-->[:react-native-file-viewer] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-file-viewer/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-37
+108            android:grantUriPermissions="true" >
+108-->[:react-native-file-viewer] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-file-viewer/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-47
+109            <meta-data
+109-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:25:13-27:63
+110                android:name="android.support.FILE_PROVIDER_PATHS"
+110-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:17-67
+111                android:resource="@xml/file_viewer_provider_paths" />
+111-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:27:17-60
+112        </provider>
+113
+114        <activity
+114-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:9-19:20
+115            android:name="com.proyecto26.inappbrowser.ChromeTabsManagerActivity"
+115-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:13-81
+116            android:exported="false" >
+116-->[:react-native-inappbrowser-reborn] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-inappbrowser-reborn/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:18:13-37
+117        </activity>
+118
+119        <provider
+119-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:32:9-40:20
+120            android:name="com.RNFetchBlob.Utils.FileProvider"
+120-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:33:13-62
+121            android:authorities="com.motimoney.mf.provider"
+121-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:34:13-60
+122            android:exported="false"
+122-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:35:13-37
+123            android:grantUriPermissions="true" >
+123-->[:rn-fetch-blob] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/rn-fetch-blob/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:36:13-47
+124            <meta-data
+124-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:25:13-27:63
+125                android:name="android.support.FILE_PROVIDER_PATHS"
+125-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:17-67
+126                android:resource="@xml/provider_paths" />
+126-->[:react-native-webview] /Users/pradhumnnn/Desktop/MotiMoneyMF/node_modules/react-native-webview/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:27:17-60
+127        </provider>
+128
+129        <activity
+129-->[com.facebook.react:react-android:0.80.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/89ee2d71482aa90a74abf94579aa4b78/transformed/react-android-0.80.0-debug/AndroidManifest.xml:19:9-21:40
+130            android:name="com.facebook.react.devsupport.DevSettingsActivity"
+130-->[com.facebook.react:react-android:0.80.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/89ee2d71482aa90a74abf94579aa4b78/transformed/react-android-0.80.0-debug/AndroidManifest.xml:20:13-77
+131            android:exported="false" />
+131-->[com.facebook.react:react-android:0.80.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/89ee2d71482aa90a74abf94579aa4b78/transformed/react-android-0.80.0-debug/AndroidManifest.xml:21:13-37
+132
+133        <provider
+133-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+134            android:name="androidx.startup.InitializationProvider"
+134-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+135            android:authorities="com.motimoney.mf.androidx-startup"
+135-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+136            android:exported="false" >
+136-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+137            <meta-data
+137-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+138                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+138-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+139                android:value="androidx.startup" />
+139-->[androidx.emoji2:emoji2:1.3.0] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/a0543b166d17217098251742806b43ab/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+140            <meta-data
+140-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/4c59999035917766b230fc31671af6ab/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+141                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+141-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/4c59999035917766b230fc31671af6ab/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+142                android:value="androidx.startup" />
+142-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/4c59999035917766b230fc31671af6ab/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+143            <meta-data
+143-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+144                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+144-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+145                android:value="androidx.startup" />
+145-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+146        </provider>
+147
+148        <receiver
+148-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+149            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+149-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+150            android:directBootAware="false"
+150-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+151            android:enabled="true"
+151-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+152            android:exported="true"
+152-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+153            android:permission="android.permission.DUMP" >
+153-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+154            <intent-filter>
+154-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+155                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+156            </intent-filter>
+157            <intent-filter>
+157-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+158                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+158-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+158-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+159            </intent-filter>
+160            <intent-filter>
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+161                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+162            </intent-filter>
+163            <intent-filter>
+163-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+164                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+164-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+164-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/02b73e501bfcde42f4c6a528e186edeb/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+165            </intent-filter>
+166        </receiver>
+167
+168        <meta-data
+168-->[com.facebook.soloader:soloader:0.12.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/5ee5ae3b232d9ddc46cf4eef335c0c7a/transformed/soloader-0.12.1/AndroidManifest.xml:12:9-14:37
+169            android:name="com.facebook.soloader.enabled"
+169-->[com.facebook.soloader:soloader:0.12.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/5ee5ae3b232d9ddc46cf4eef335c0c7a/transformed/soloader-0.12.1/AndroidManifest.xml:13:13-57
+170            android:value="false" />
+170-->[com.facebook.soloader:soloader:0.12.1] /Users/pradhumnnn/.gradle/caches/8.14.1/transforms/5ee5ae3b232d9ddc46cf4eef335c0c7a/transformed/soloader-0.12.1/AndroidManifest.xml:14:13-34
+171    </application>
+172
+173</manifest>
