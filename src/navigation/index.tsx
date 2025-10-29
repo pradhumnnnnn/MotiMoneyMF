@@ -165,7 +165,7 @@ const ExitNotification = ({ visible, onHide }) => {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.notificationText}>Press back again to exit TaurusFund</Text>
+        <Text style={styles.notificationText}>Press back again to exit MotiMoney</Text>
       </View>
     </Animated.View>
   );
@@ -263,7 +263,7 @@ function BottomTabNavigator() {
           ),
           tabBarStyle: {
             height: widthToDp(18),
-            backgroundColor: '#2B8DF6',
+            backgroundColor: '#f0b538',
             position: 'absolute',
             shadowOffset: {
               width: 6,

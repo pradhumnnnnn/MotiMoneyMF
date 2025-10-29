@@ -267,7 +267,7 @@ const transformNFOData = (apiData, tab) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#2B8DF6', '#2B8DF6']}
+      colors={['#f0b538', '#f0b538']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -442,7 +442,7 @@ const transformNFOData = (apiData, tab) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
       
       <Header />
 
@@ -467,7 +467,7 @@ const transformNFOData = (apiData, tab) => {
       <View style={styles.content}>
         {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2B8DF6" />
+            <ActivityIndicator size="large" color="#f0b538" />
             <Text style={styles.loadingText}>Loading NFOs...</Text>
           </View>
         ) : error && nfoData.length === 0 ? (
@@ -487,8 +487,8 @@ const transformNFOData = (apiData, tab) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={['#2B8DF6']}
-                tintColor="#2B8DF6"
+                colors={['#f0b538']}
+                tintColor="#f0b538"
               />
             }
           />
@@ -505,10 +505,10 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
   },
   headerGradient: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
     paddingBottom: heightToDp(2),
   },
   headerContent: {
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     borderRadius: widthToDp(2),
   },
   activeTab: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
   },
   tabText: {
     fontSize: widthToDp(3.5),
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   investButton: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
     paddingHorizontal: widthToDp(4),
     paddingVertical: heightToDp(1.2),
     borderRadius: widthToDp(2),
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     marginBottom: heightToDp(2),
   },
   retryButton: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
     paddingHorizontal: widthToDp(6),
     paddingVertical: heightToDp(1.5),
     borderRadius: widthToDp(2),

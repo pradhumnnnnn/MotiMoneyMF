@@ -56,7 +56,7 @@ const Tracker = ({ navigation }) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#2B8DF6', '#2B8DF6']}
+      colors={['#f0b538', '#f0b538']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -84,7 +84,7 @@ const Tracker = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
       
       <Header />
 
@@ -96,7 +96,7 @@ const Tracker = ({ navigation }) => {
         {/* Show loading state if needed */}
         {loading && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2B8DF6" />
+            <ActivityIndicator size="large" color="#f0b538" />
             <Text style={styles.loadingText}>Loading your investments...</Text>
           </View>
         )}
@@ -251,12 +251,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
     paddingBottom: heightToDp(2),
   },
   headerContent: {
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: widthToDp(4.5),
     fontWeight: 'bold',
-    color: '#2B8DF6',
+    color: '#f0b538',
     marginRight: widthToDp(2),
   },
 

@@ -34,8 +34,8 @@ export const fontFamilys = {
 };
 
 export const Colors = {
-    primary: '#1768BF',
-    secondary: '#94BC39',
+    primary: '#f0b538',
+    secondary: '#f0b538',
     bottomTabColor: '#f6fbff',
     activeColor: '#000000',
     inactiveColor: '#000000',

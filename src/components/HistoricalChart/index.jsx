@@ -193,7 +193,7 @@ const SelectedPointIndicator = memo(({ selectedPoint, tooltipVisible, topPadding
         cy={selectedPoint.y}
         r={6}
         fill="#ffffff"
-        stroke="#2B8DF6"
+        stroke="#f0b538"
         strokeWidth={2}
       />
       <Circle
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   timeButtonTextActive: {
-    color: '#2B8DF6',
+    color: '#f0b538',
   },
   yAxisLabel: {
     fontSize: 10,

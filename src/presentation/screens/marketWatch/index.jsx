@@ -742,11 +742,11 @@ import SInfoSvg from '../../svgs';
     return (
       <SafeAreaView style={styles.container}>
         {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-        <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+        <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
 
         {/* Header with Gradient Background */}
         <LinearGradient
-          colors={['#2B8DF6', '#2B8DF6']}
+          colors={['#f0b538', '#f0b538']}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
@@ -801,10 +801,10 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
   },
   headerGradient: {
-    backgroundColor: '#2B8DF6',
+    backgroundColor: '#f0b538',
     paddingBottom: heightToDp(1),
   },
   chartContainer: {
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
     borderRadius: widthToDp(2),
   },
   retryButtonText: {
-    color: '#2B8DF6',
+    color: '#f0b538',
     fontSize: widthToDp(3.5),
     fontWeight: '600',
   },
