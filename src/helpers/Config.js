@@ -1,5 +1,5 @@
-// export const baseUrl = "https://onekyc.finovo.tech:8015";
-export const baseUrl = "http://192.168.100.40:8018";
+export const baseUrl = "https://onekyc.finovo.tech:8017";
+// export const baseUrl = "http://192.168.100.40:8018";
 export const store_key_login_details = "token"
 
 export const clientCode = "clientCode";
@@ -35,7 +35,7 @@ export const fontFamilys = {
 
 export const Colors = {
     primary: '#f0b538',
-    secondary: '#f0b538',
+    secondary: '#94BC39',
     bottomTabColor: '#f6fbff',
     activeColor: '#000000',
     inactiveColor: '#000000',
@@ -60,7 +60,7 @@ export const Colors = {
     searchBriderInput: "#C6CACF",
     yellow: "#FFEE02",
     green: "#098F3C",
-    cyan_blue: '#f6fbff',
+    cyan_blue: '#ffffff',
     purple_main:'#5F3C80',
     itemSeparatorBorder: "#515151",
     gray:"#c9c6c5",

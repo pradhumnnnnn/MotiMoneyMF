@@ -9,7 +9,7 @@ const useGetPortfolioData = () => {
   const fetchPortfolioData = async () => {
     try {
       setLoading(true);
-      const response = await apiGetService('/api/v1/commone/feature/user/installment-due-dates');
+      const response = await apiGetService('/api/v1/order/allotement/order/units');
       console.log('Portfolio Data Response:', response.data);
       setPortfolioData(response?.data);
     } catch (err) {

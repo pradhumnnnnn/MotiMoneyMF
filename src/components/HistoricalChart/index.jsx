@@ -63,7 +63,7 @@ const TimeRangeButton = memo(({ range, active, onPress }) => (
   <TouchableOpacity
     style={[
       styles.timeButton, 
-      active && { ...styles.timeButtonActive, backgroundColor: '#1768BF' }
+      active && { ...styles.timeButtonActive, backgroundColor: '#f1dfbaff' }
     ]}
     onPress={onPress}
   >
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: 'absolute',
-    backgroundColor: 'rgba(43, 141, 246, 0.9)',
+    backgroundColor: 'rgba(231, 192, 50, 0.9)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     bottom: -6,
     width: 12,
     height: 12,
-    backgroundColor: 'rgba(43, 141, 246, 0.9)',
+    backgroundColor: 'rgba(231, 192, 50, 0.9)',
     transform: [{ rotate: '45deg' }],
   },
   timeRangeButtons: {

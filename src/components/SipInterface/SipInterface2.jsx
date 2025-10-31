@@ -602,7 +602,7 @@ const SipInterface = ({ navigation }) => {
                   style={styles.slider}
                   thumbStyle={styles.thumbStyle}
                   trackStyle={styles.trackStyle}
-                  minimumTrackTintColor="#1768BF"
+                  minimumTrackTintColor="#dfb049ff"
                   maximumTrackTintColor="#d3d3d3"
                   thumbTintColor={Config.Colors.primary}
                 />

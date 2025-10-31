@@ -105,7 +105,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#1768BF"
+//             minimumTrackTintColor="#dfb049ff"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -143,7 +143,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#1768BF"
+//             minimumTrackTintColor="#dfb049ff"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -185,7 +185,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#1768BF"
+//             minimumTrackTintColor="#dfb049ff"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -363,11 +363,19 @@ const SIPCalculator = () => {
         >
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity> */}
+        <View style={{  alignItems: "center", gap: 10 }}>
+
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <SInfoSvg.Remote />
           <Text style={styles.heading}>SIP Calculator</Text>
         </View>
+            <View style={styles.resultContainer}>
+          <Text style={styles.resultText}>
+            Total Investment Value: ₹{totalAmount || '0.00'}
+          </Text>
+        </View>
 
+        </View>
         <View style={{ marginTop: 15 }}>
           <View
             style={{
@@ -401,7 +409,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#1768BF"
+            minimumTrackTintColor="#f0b538"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />
@@ -440,7 +448,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#1768BF"
+            minimumTrackTintColor="#dfb049ff"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />
@@ -483,7 +491,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#1768BF"
+            minimumTrackTintColor="#dfb049ff"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />
@@ -493,11 +501,7 @@ const SIPCalculator = () => {
           Calculate
         </Button> */}
 
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultText}>
-            Total Investment Value: ₹{totalAmount || '0.00'}
-          </Text>
-        </View>
+    
       </ScrollView>
     </View>
   );

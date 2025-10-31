@@ -61,130 +61,63 @@ const NFO = () => {
   };
 
 const transformNFOData = (apiData, tab) => {
-//   console.log('=== transformNFOData START ===');
-//   console.log('Input apiData:', apiData);
-//   console.log('Active tab:', tab);
-  
-  if (!apiData) {
-    // console.log('❌ apiData is null or undefined');
-    return [];
-  }
-  
-  if (!apiData.data) {
-    // console.log('❌ apiData.data is null or undefined');
-    // console.log('Available keys in apiData:', Object.keys(apiData));
-    return [];
-  }
-
-//   console.log('apiData.data structure:', apiData.data);
-//   console.log('Available keys in apiData.data:', Object.keys(apiData.data));
+  if (!apiData?.data) return [];
 
   const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  
-//   console.log('Current date:', currentDate);
-//   console.log('Current month:', currentMonth, '(0-based, 0=Jan, 11=Dec)');
-//   console.log('Current year:', currentYear);
-
-  // Filter function to check if date is within current month
-  const isCurrentMonth = (dateString) => {
-    if (!dateString) {
-    //   console.log('⚠️ dateString is null or undefined');
-      return false;
-    }
-    
-    // console.log('Checking date:', dateString);
-    const date = new Date(dateString);
-    // console.log('Parsed date:', date);
-    
-    if (isNaN(date.getTime())) {
-    //   console.log('❌ Invalid date format');
-      return false;
-    }
-    
-    const isCurrent = date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-    // console.log(`Date ${dateString} is current month: ${isCurrent}`);
-    return isCurrent;
-  };
 
   let sourceData = [];
-  
-  // Select data based on active tab
-//   console.log(`=== Selecting data for tab: ${tab} ===`);
   switch (tab) {
     case 'LIVE':
       sourceData = apiData.data.active || [];
-    //   console.log('LIVE data selected, count:', sourceData.length);
-    //   console.log('First few LIVE items:', sourceData.slice(0, 3));
       break;
     case 'UPCOMING':
       sourceData = apiData.data.upcoming || [];
-    //   console.log('UPCOMING data selected, count:', sourceData.length);
-    //   console.log('First few UPCOMING items:', sourceData.slice(0, 3));
       break;
     case 'CLOSED':
       sourceData = apiData.data.recentlyClosed || [];
-    //   console.log('CLOSED data selected, count:', sourceData.length);
-    //   console.log('First few CLOSED items:', sourceData.slice(0, 3));
       break;
     default:
       sourceData = [];
-    //   console.log('❌ Unknown tab selected');
-      break;
   }
 
-//   console.log(`=== Filtering ${sourceData.length} items for current month ===`);
-  
-  // Filter data for current month and transform
   const filteredData = sourceData
-    .filter((item, index) => {
-    //   console.log(`\n--- Filtering item ${index} ---`);
-    //   console.log('Item:', item);
-    //   console.log('Item startDate:', item.startDate);
-    //   console.log('Item endDate:', item.endDate);
-    //   console.log('Item schemeName:', item.schemeName);
-      
-      const startDate = item.startDate;
-      const isInCurrentMonth = isCurrentMonth(startDate);
-      
-    //   console.log(`Item ${index} included in current month: ${isInCurrentMonth}`);
-      return isInCurrentMonth;
-    })
-    .map((item, index) => {
-    //   console.log(`\n--- Transforming item ${index} ---`);
-    //   console.log('Original item:', item);
-      
-      const transformedItem = {
-        id: item._id || `nfo-${index}-${Date.now()}`,
-        schemeName: item.schemeName || 'N/A',
-        category: item.schemeType || 'Other',
-        openDate: formatDate(item.startDate),
-        closeDate: formatDate(item.endDate),
-        minInvestment: 5000, // Default value since not in API
-        fundHouse: getFundHouseName(item.amcCode),
-        riskLevel: getRiskLevel(item.schemeType),
-        rating: 4.0, // Default rating
-        description: `${item.schemeType} Fund - ${item.schemePlan || 'Regular Plan'}`,
-        logo: getFundLogo(item.amcCode),
-        schemeCode: item.schemeCode,
-        purchaseAllowed: item.purchaseAllowed,
-        sipFlag: item.sipFlag,
-        originalData: item
-      };
-      
-    //   console.log('Transformed item:', transformedItem);
-      return transformedItem;
-    });
+    // .filter(item => {
+    //   const openDate = new Date(item.startDate || item.openDate);
+    //   const closeDate = new Date(item.endDate || item.closeDate);
+    //   if (isNaN(openDate) || isNaN(closeDate)) return false;
 
-//   console.log(`=== transformNFOData COMPLETE ===`);
-//   console.log(`Total items before filtering: ${sourceData.length}`);
-//   console.log(`Total items after filtering: ${filteredData.length}`);
-//   console.log('Final filtered data:', filteredData);
-//   console.log('=== transformNFOData END ===\n');
+    //   // Condition 1: Open date should be within the last 20 days
+    //   const diffOpenDays = (currentDate - openDate) / (1000 * 60 * 60 * 24);
+    //   const isRecentOpen = diffOpenDays <= 20 && diffOpenDays >= 0;
+
+    //   // Condition 2: Close date should NOT be within next 4-5 days
+    //   const diffCloseDays = (closeDate - currentDate) / (1000 * 60 * 60 * 24);
+    //   const isClosingSoon = diffCloseDays <= 5 && diffCloseDays >= 0;
+
+    //   // Show only if recently opened and not closing soon
+    //   return isRecentOpen && !isClosingSoon;
+    // })
+    .map((item, index) => ({
+      id: item._id || `nfo-${index}-${Date.now()}`,
+      schemeName: item.schemeName || 'N/A',
+      category: item.schemeType || 'Other',
+      openDate: formatDate(item.startDate || item.openDate),
+      closeDate: formatDate(item.endDate || item.closeDate),
+      minInvestment: 5000,
+      fundHouse: getFundHouseName(item.amcCode),
+      riskLevel: getRiskLevel(item.schemeType),
+      rating: 4,
+      description: `${item.schemeType} Fund - ${item.schemePlan || 'Regular Plan'}`,
+      logo: getFundLogo(item.amcCode),
+      schemeCode: item.schemeCode,
+      purchaseAllowed: item.purchaseAllowed,
+      sipFlag: item.sipFlag,
+      originalData: item,
+    }));
 
   return filteredData;
 };
+
   // Helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -282,7 +215,7 @@ const transformNFOData = (apiData, tab) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <SInfoSvg.BackButton />
+          <SInfoSvg.WhiteBackButton />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>New Fund Offers</Text>
@@ -404,7 +337,10 @@ const transformNFOData = (apiData, tab) => {
               styles.investButton,
               item.purchaseAllowed !== 'Y' && styles.disabledButton
             ]}
-        
+        onPress={() => {
+              dispatch(setMarketData(item?.originalData));
+              navigation.navigate('MarketWatch');
+            }}
             disabled={activeTab === 'LIVE' && item.purchaseAllowed !== 'Y'}
           >
             <Text style={styles.investButtonText}>

@@ -25,22 +25,26 @@ import CustomSlider from '../CustomSlider';
 import { apiPostService } from '../../helpers/services';
 import { getData } from '../../helpers/localStorage';
 import Rbutton from '../Rbutton';
+import InvestedPorfolio from '../../hooks/investedPortfolio';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const SipInterface = ({ navigation }) => {
   const Data = useSelector(state => state.marketWatch.sipInterface);
-  console.log("SIP INTERFACE", Data)
+  // console.log('SIP INTERFACE', Data);
+  const { investmentData, loading, error, refetch } = InvestedPorfolio();
+  // console.log('SIP INTERFACE INSIDE', investmentData);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [customizeModalVisible, setCustomizeModalVisible] = useState(false);
   const [pauseModalVisible, setPauseModalVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
-  const [pauseDuration, setPauseDuration] = useState(1);
+  const steps = [3, 6, 9, 12];
+  const [pauseDuration, setPauseDuration] = useState(steps[0]);
   const [selectedCancelOption, setSelectedCancelOption] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [otherReason, setOtherReason] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loader, setLoading] = useState(false);
   const [redemptionModalVisible, setRedemptionModalVisible] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState('');
@@ -51,7 +55,7 @@ const SipInterface = ({ navigation }) => {
     numberOfWithdrawls: '',
     startDate: '',
     installmentUnits: '',
-    firstOrderToday: false
+    firstOrderToday: false,
   });
   const [stepUpModalVisible, setStepUpModalVisible] = useState(false);
   const [stepUpSlideAnim] = useState(new Animated.Value(screenHeight));
@@ -60,7 +64,7 @@ const SipInterface = ({ navigation }) => {
     sipInstallmentAmount: '',
     incrementType: 'percentage', // 'percentage' or 'amount'
     nextSipIncrementPercentage: '',
-    nextSipIncrementByAmount: ''
+    nextSipIncrementByAmount: '',
   });
 
   const [slideAnim] = useState(new Animated.Value(screenHeight));
@@ -80,37 +84,57 @@ const SipInterface = ({ navigation }) => {
     'Modifications in bank/mandate/date etc',
     'I have decided to invest elsewhere',
     'This is not the right time to invest',
-    'Others (pls specify the reason)'
+    'Others (pls specify the reason)',
   ];
-const [switchModalVisible, setSwitchModalVisible] = useState(false);
-const [switchSlideAnim] = useState(new Animated.Value(screenHeight));
+  const [switchModalVisible, setSwitchModalVisible] = useState(false);
+  const [switchSlideAnim] = useState(new Animated.Value(screenHeight));
 
-const [switchForm, setSwitchForm] = useState({
-  fromSchemeCd: '',
-  toSchemeCd: '',
-  switchAmount: '',
-  allUnitsFlag: 'N', // "Y" = All Units, "N" = Partial
-  buySellType: 'FRESH', // "FRESH" or "ADDITIONAL"
-  folioNo: '', // Required only for physical clients
-  remarks: 'Client initiated switch order',
-});
+  const [switchForm, setSwitchForm] = useState({
+    fromSchemeCd: '',
+    toSchemeCd: '',
+    switchAmount: '',
+    allUnitsFlag: 'N', // "Y" = All Units, "N" = Partial
+    buySellType: 'FRESH', // "FRESH" or "ADDITIONAL"
+    folioNo: '', // Required only for physical clients
+    remarks: 'Client initiated switch order',
+  });
+  const [matchedHolding, setMatchedHolding] = useState(null);
+  const [matchedData, setMatchedData] = useState(null);
 
-const openSwitchModal = () =>{
-   closeCustomizeModal();
+  useEffect(() => {
+    if (investmentData?.holdings && Data?.ISIN) {
+      const found = investmentData.holdings.find(h => h?.ISIN === Data?.ISIN);
+      setMatchedHolding(found);
+      console.log('MATCHED DATA', found);
+    }
+    if (investmentData?.holdings && Data?.ISIN) {
+      const found = investmentData.bseAllotments.find(
+        h => h?.ISIN === Data?.ISIN,
+      );
+      setMatchedData(found);
+      console.log('MATCHED DATA', found);
+    }
+  }, [investmentData, Data]);
+
+  const openSwitchModal = () => {
+    closeCustomizeModal();
     setTimeout(() => {
-    setSwitchModalVisible(true)
+      setSwitchModalVisible(true);
       animateModal(switchSlideAnim, 0);
     }, 300);
-}
-const closeSwitchModal = () => setSwitchModalVisible(false);
+  };
+  const closeSwitchModal = () => setSwitchModalVisible(false);
 
-const updateSwitchForm = (field, value) =>
-  setSwitchForm(prev => ({ ...prev, [field]: value }));
+  const updateSwitchForm = (field, value) =>
+    setSwitchForm(prev => ({ ...prev, [field]: value }));
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      navigation.goBack();
-      return true;
-    });
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        navigation.goBack();
+        return true;
+      },
+    );
     return () => backHandler.remove();
   }, [navigation]);
 
@@ -119,7 +143,7 @@ const updateSwitchForm = (field, value) =>
       title,
       message,
       [{ text: 'OK', style: isSuccess ? 'default' : 'cancel' }],
-      { cancelable: false }
+      { cancelable: false },
     );
   };
 
@@ -174,39 +198,44 @@ const updateSwitchForm = (field, value) =>
   };
 
   const handlePauseSIP = async () => {
-    if (!Data?.SIPRegnNo) {
+    if (!matchedData?.SIPRegnNo) {
       showResponseMessage('Error', 'SIP Registration Number not found', false);
       return;
     }
 
     setLoading(true);
+    console.log('VALUES', matchedData.SIPRegnNo);
     try {
       const response = await apiPostService('/api/v1/order/pause/sip/entry', {
-        sipRegistrationNumber: Data.SIPRegnNo,
-        pauseInstNumber: pauseDuration,
+        sipRegistrationNumber: matchedData.SIPRegnNo,
+        pauseInstNumber: String(pauseDuration),
       });
-
+      console.log('PAUSE RES', response);
       const isSuccess = response?.status === 200 || response?.status === 201;
 
       if (isSuccess) {
         showResponseMessage(
           'Success',
-          response?.data?.message || `SIP paused successfully for ${pauseDuration} month${pauseDuration > 1 ? 's' : ''}`
+          response?.data?.message ||
+            `SIP paused successfully for ${pauseDuration} month${
+              pauseDuration > 1 ? 's' : ''
+            }`,
         );
         closePauseModal();
       } else {
         showResponseMessage(
           'Error',
           response?.data?.message || 'Failed to pause SIP. Please try again.',
-          false
+          false,
         );
       }
     } catch (error) {
       console.error('Failed to pause SIP:', error);
       showResponseMessage(
         'Error',
-        error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
     } finally {
       setLoading(false);
@@ -214,35 +243,42 @@ const updateSwitchForm = (field, value) =>
   };
 
   const handleCancelSIP = async () => {
-    const cancelReasonText = selectedCancelOption === 'Others (pls specify the reason)'
-      ? otherReason.trim()
-      : selectedCancelOption;
+    const cancelReasonText =
+      selectedCancelOption === 'Others (pls specify the reason)'
+        ? otherReason.trim()
+        : selectedCancelOption;
 
     if (!cancelReasonText) {
-      showResponseMessage('Error', 'Please select a cancellation reason', false);
+      showResponseMessage(
+        'Error',
+        'Please select a cancellation reason',
+        false,
+      );
       return;
     }
 
-    if (!Data?.SIPRegnNo) {
+    if (!matchedData?.SIPRegnNo) {
       showResponseMessage('Error', 'SIP Registration Number not found', false);
       return;
     }
 
     setLoading(true);
     try {
-      const clientCode = await getData("clientCode");
-      const cancelReasonIndex = cancelOptions.findIndex(option => option === selectedCancelOption);
+      const clientCode = await getData('clientCode');
+      const cancelReasonIndex = cancelOptions.findIndex(
+        option => option === selectedCancelOption,
+      );
 
       const response = await apiPostService(
         '/api/v1/order/cancellation/sip/entry',
         {
-          xsipRegistrationID: Data.SIPRegnNo,
-          remarks: cancelReasonText,
-          ceaseBseCode: String(cancelReasonIndex + 1).padStart(2, '0')
+          xsipRegistrationID: matchedData.SIPRegnNo,
+          remarks: '',
+          ceaseBseCode: String(cancelReasonIndex + 1).padStart(2, '0'),
         },
         {
-          headers: { clientCode }
-        }
+          headers: { clientCode },
+        },
       );
 
       const isSuccess = response?.status === 200 || response?.status === 201;
@@ -250,22 +286,23 @@ const updateSwitchForm = (field, value) =>
       if (isSuccess) {
         showResponseMessage(
           'Success',
-          response?.data?.message || 'SIP cancelled successfully'
+          response?.data?.message || 'SIP cancelled successfully',
         );
         closeCancelModal();
       } else {
         showResponseMessage(
           'Error',
           response?.data?.message || 'Failed to cancel SIP. Please try again.',
-          false
+          false,
         );
       }
     } catch (error) {
       console.error('Failed to cancel SIP:', error);
       showResponseMessage(
         'Error',
-        error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
     } finally {
       setLoading(false);
@@ -292,57 +329,66 @@ const updateSwitchForm = (field, value) =>
         numberOfWithdrawls: '',
         startDate: '',
         installmentUnits: '',
-        firstOrderToday: false
+        firstOrderToday: false,
       });
     });
   };
 
   const handleSIPRedemption = async () => {
-    if (!Data?.schemeCode) {
+    if (!matchedData?.schemeCode) {
       showResponseMessage('Error', 'Scheme Code not found', false);
       return;
     }
 
-    if (!redemptionForm.installmentAmount || !redemptionForm.numberOfWithdrawls || !redemptionForm.startDate) {
+    if (
+      !redemptionForm.installmentAmount ||
+      !redemptionForm.numberOfWithdrawls ||
+      !redemptionForm.startDate
+    ) {
       showResponseMessage('Error', 'Please fill all required fields', false);
       return;
     }
 
     setLoading(true);
     try {
-      const clientCode = await getData("clientCode");
+      const clientCode = await getData('clientCode');
       const response = await apiPostService(
         '/api/v1/order/redeem/registration/swp/auth',
         {
-          schemaCode: Data.schemeCode,
-          frequencyType: "MONTHLY",
+          schemaCode: matchedData.schemeCode,
+          frequencyType: 'MONTHLY',
           installmentAmount: redemptionForm.installmentAmount,
           numberOfWithdrawls: redemptionForm.numberOfWithdrawls,
           startDate: redemptionForm.startDate,
           installmentUnits: redemptionForm.installmentUnits,
-          firstOrderToday: redemptionForm.firstOrderToday
+          firstOrderToday: redemptionForm.firstOrderToday,
         },
         {
-          headers: { clientCode }
-        }
+          headers: { clientCode },
+        },
       );
 
       if (response?.status === 200 || response?.status === 201) {
-        showResponseMessage('OTP Sent', 'OTP has been sent for verification. Please enter the 4-digit OTP to complete your redemption.');
+        showResponseMessage(
+          'OTP Sent',
+          'OTP has been sent for verification. Please enter the 4-digit OTP to complete your redemption.',
+        );
         setShowOtpInput(true);
       } else {
         showResponseMessage(
           'Error',
-          response?.data?.message || 'Failed to initiate redemption. Please try again.',
-          false
+          response?.data?.message ||
+            'Failed to initiate redemption. Please try again.',
+          false,
         );
       }
     } catch (error) {
       console.error('Failed to initiate redemption:', error);
       showResponseMessage(
         'Error',
-        error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
     } finally {
       setLoading(false);
@@ -357,29 +403,29 @@ const updateSwitchForm = (field, value) =>
 
     setLoading(true);
     try {
-      const clientCode = await getData("clientCode");
+      const clientCode = await getData('clientCode');
       const response = await apiPostService(
         '/api/v1/order/redeem/registration/swp',
         {
           otp: otp,
-          schemaCode: Data.schemeCode,
+          schemaCode: matchedData.schemeCode,
           // frequencyType: redemptionForm.frequencyType,
           frequencyType: 'MONTHLY',
           installmentAmount: redemptionForm.installmentAmount,
           numberOfWithdrawls: redemptionForm.numberOfWithdrawls,
           startDate: redemptionForm.startDate,
           installmentUnits: redemptionForm.installmentUnits,
-          firstOrderToday: redemptionForm.firstOrderToday
+          firstOrderToday: redemptionForm.firstOrderToday,
         },
         {
-          headers: { clientCode }
-        }
+          headers: { clientCode },
+        },
       );
 
       if (response?.status === 200 || response?.status === 201) {
         showResponseMessage(
           'Success',
-          response?.data?.message || 'SIP Redemption completed successfully!'
+          response?.data?.message || 'SIP Redemption completed successfully!',
         );
         setRedemptionModalVisible(false);
         setShowOtpInput(false);
@@ -390,84 +436,94 @@ const updateSwitchForm = (field, value) =>
           numberOfWithdrawls: '',
           startDate: '',
           installmentUnits: '',
-          firstOrderToday: false
+          firstOrderToday: false,
         });
       } else {
         showResponseMessage(
           'Error',
-          response?.data?.message || 'Invalid OTP or redemption failed. Please try again.',
-          false
+          response?.data?.message ||
+            'Invalid OTP or redemption failed. Please try again.',
+          false,
         );
       }
     } catch (error) {
       console.error('Failed to verify OTP:', error);
       showResponseMessage(
         'Error',
-        error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
     } finally {
       setLoading(false);
     }
   };
-const handleSwitchSIP = async () => {
-  // ✅ Validate required fields
-  if (!switchForm.fromSchemeCd || !switchForm.toSchemeCd || !switchForm.switchAmount) {
-    showResponseMessage('Error', 'Please fill all required fields', false);
-    return;
-  }
+  const handleSwitchSIP = async () => {
+    // ✅ Validate required fields
+    if (
+      !switchForm.fromSchemeCd ||
+      !switchForm.toSchemeCd ||
+      !switchForm.switchAmount
+    ) {
+      showResponseMessage('Error', 'Please fill all required fields', false);
+      return;
+    }
 
-  setLoading(true);
-  try {
-    // ✅ Get clientCode from local storage
-    const clientCode = await getData("clientCode");
+    setLoading(true);
+    try {
+      // ✅ Get clientCode from local storage
+      const clientCode = await getData('clientCode');
 
-    // ✅ Prepare payload based on API structure
-    const payload = {
-      fromSchemeCd: switchForm.fromSchemeCd,
-      toSchemeCd: switchForm.toSchemeCd,
-      switchAmount: switchForm.switchAmount,
-      allUnitsFlag: switchForm.allUnitsFlag,
-      buySellType: switchForm.buySellType,
-      folioNo: switchForm.folioNo, // required only for Physical clients
-      remarks: switchForm.remarks || 'Client initiated switch order'
-    };
+      // ✅ Prepare payload based on API structure
+      const payload = {
+        fromSchemeCd: Data.schemeCode,
+        toSchemeCd: switchForm.toSchemeCd,
+        switchAmount: switchForm.switchAmount,
+        allUnitsFlag: switchForm.allUnitsFlag,
+        buySellType: switchForm.buySellType,
+        folioNo: switchForm.folioNo, // required only for Physical clients
+        remarks: switchForm.remarks || 'Client initiated switch order',
+      };
 
-    // ✅ Call API using existing service
-    const response = await apiPostService(
-      '/api/v1/mutualfund/switch-order',
-      payload,
-      {
-        headers: {
-          Authorization: authToken, // make sure you have this token available
-          clientCode,
-          'Content-Type': 'application/json'
-        }
+      // ✅ Call API using existing service
+      const response = await apiPostService(
+        '/api/v1/mutualfund/switch-order',
+        payload,
+        {
+          headers: {
+            Authorization: authToken, // make sure you have this token available
+            clientCode,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      // ✅ Handle success / failure response
+      if (response?.status === 200 || response?.status === 201) {
+        showResponseMessage(
+          'Success',
+          'Switch SIP request submitted successfully.',
+        );
+        closeSwitchModal();
+      } else {
+        showResponseMessage(
+          'Error',
+          response?.data?.message || 'Failed to submit Switch SIP request.',
+          false,
+        );
       }
-    );
-
-    // ✅ Handle success / failure response
-    if (response?.status === 200 || response?.status === 201) {
-      showResponseMessage('Success', 'Switch SIP request submitted successfully.');
-      closeSwitchModal();
-    } else {
+    } catch (error) {
+      console.error('Switch SIP API error:', error);
       showResponseMessage(
         'Error',
-        response?.data?.message || 'Failed to submit Switch SIP request.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Switch SIP API error:', error);
-    showResponseMessage(
-      'Error',
-      error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-      false
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const openStepUpModal = () => {
     closeCustomizeModal();
@@ -485,7 +541,7 @@ const handleSwitchSIP = async () => {
         sipInstallmentAmount: '',
         incrementType: 'percentage',
         nextSipIncrementPercentage: '',
-        nextSipIncrementByAmount: ''
+        nextSipIncrementByAmount: '',
       });
     });
   };
@@ -493,54 +549,66 @@ const handleSwitchSIP = async () => {
   const updateStepUpForm = (field, value) => {
     setStepUpForm(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleStepUpSIP = async () => {
-    if (!Data?.schemeCode) {
+    if (!matchedData?.schemeCode) {
       showResponseMessage('Error', 'Scheme Code not found', false);
       return;
     }
 
     if (!stepUpForm.sipInstallmentAmount) {
-      showResponseMessage('Error', 'Please enter current SIP installment amount', false);
+      showResponseMessage(
+        'Error',
+        'Please enter current SIP installment amount',
+        false,
+      );
       return;
     }
 
-    if (stepUpForm.incrementType === 'percentage' && !stepUpForm.nextSipIncrementPercentage) {
+    if (
+      stepUpForm.incrementType === 'percentage' &&
+      !stepUpForm.nextSipIncrementPercentage
+    ) {
       showResponseMessage('Error', 'Please enter increment percentage', false);
       return;
     }
 
-    if (stepUpForm.incrementType === 'amount' && !stepUpForm.nextSipIncrementByAmount) {
+    if (
+      stepUpForm.incrementType === 'amount' &&
+      !stepUpForm.nextSipIncrementByAmount
+    ) {
       showResponseMessage('Error', 'Please enter increment amount', false);
       return;
     }
 
     setLoading(true);
     try {
-      const clientCode = await getData("clientCode");
+      const clientCode = await getData('clientCode');
       const requestBody = {
-        schemaCode: Data.schemeCode,
-        sipOrderId: Data?.SIPRegnNo || "12345", // Use actual SIP ID or fallback
+        schemaCode: matchedData?.schemeCode,
+        sipOrderId: matchedData?.SIPRegnNo || '12345', // Use actual SIP ID or fallback
         duration: stepUpForm.duration,
         sipInstallmentAmount: stepUpForm.sipInstallmentAmount,
       };
 
       // Add increment field based on selected type
       if (stepUpForm.incrementType === 'percentage') {
-        requestBody.nextSipIncrementPercentage = stepUpForm.nextSipIncrementPercentage;
+        requestBody.nextSipIncrementPercentage =
+          stepUpForm.nextSipIncrementPercentage;
       } else {
-        requestBody.nextSipIncrementByAmount = stepUpForm.nextSipIncrementByAmount;
+        requestBody.nextSipIncrementByAmount =
+          stepUpForm.nextSipIncrementByAmount;
       }
 
       const response = await apiPostService(
         '/api/v1/order/stepup/sip/entry',
         requestBody,
         {
-          headers: { clientCode }
-        }
+          headers: { clientCode },
+        },
       );
 
       const isSuccess = response?.status === 200 || response?.status === 201;
@@ -548,22 +616,24 @@ const handleSwitchSIP = async () => {
       if (isSuccess) {
         showResponseMessage(
           'Success',
-          response?.data?.message || 'SIP Step-up activated successfully'
+          response?.data?.message || 'SIP Step-up activated successfully',
         );
         closeStepUpModal();
       } else {
         showResponseMessage(
           'Error',
-          response?.data?.message || 'Failed to activate SIP Step-up. Please try again.',
-          false
+          response?.data?.message ||
+            'Failed to activate SIP Step-up. Please try again.',
+          false,
         );
       }
     } catch (error) {
       console.error('Failed to activate SIP Step-up:', error);
       showResponseMessage(
         'Error',
-        error?.response?.data?.message || 'Network error. Please check your connection and try again.',
-        false
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
       );
     } finally {
       setLoading(false);
@@ -573,20 +643,23 @@ const handleSwitchSIP = async () => {
   const updateRedemptionForm = (field, value) => {
     setRedemptionForm(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const formatDateForInput = (dateStr) => {
+  const formatDateForInput = dateStr => {
     if (!dateStr) return '';
     const parts = dateStr.split('/');
     if (parts.length === 3) {
-      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(
+        2,
+        '0',
+      )}`;
     }
     return dateStr;
   };
 
-  const formatDateForAPI = (dateStr) => {
+  const formatDateForAPI = dateStr => {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
     if (parts.length === 3) {
@@ -607,13 +680,17 @@ const handleSwitchSIP = async () => {
   const formatCurrency = amount => {
     if (!amount) return '₹0';
     const numAmount = parseFloat(amount);
-    return numAmount >= 1000 ? `₹${(numAmount / 1000).toFixed(1)}K` : `₹${numAmount.toFixed(0)}`;
+    return numAmount >= 1000
+      ? `₹${(numAmount / 1000).toFixed(1)}K`
+      : `₹${numAmount.toFixed(0)}`;
   };
 
-  const getOrdinalSuffix = (num) => {
+  const getOrdinalSuffix = num => {
     const suffixes = ['th', 'st', 'nd', 'rd'];
     const remainder = num % 100;
-    return suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0];
+    return (
+      suffixes[(remainder - 20) % 10] || suffixes[remainder] || suffixes[0]
+    );
   };
 
   const styles = getStyles(isDarkTheme);
@@ -635,11 +712,15 @@ const handleSwitchSIP = async () => {
           </View>
           <View style={styles.detailColumn}>
             <Text style={styles.detailLabel}>Allotted NAV</Text>
-            <Text style={styles.detailValue}>₹{parseFloat(item.allottedNav || 0).toFixed(2)}</Text>
+            <Text style={styles.detailValue}>
+              ₹{parseFloat(item.allottedNav || 0).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.detailColumn}>
             <Text style={styles.detailLabel}>Amount</Text>
-            <Text style={styles.detailValue}>{formatCurrency(item.amount)}</Text>
+            <Text style={styles.detailValue}>
+              {formatCurrency(item.amount)}
+            </Text>
           </View>
         </View>
 
@@ -650,7 +731,9 @@ const handleSwitchSIP = async () => {
           </View>
           <View style={styles.detailColumn}>
             <Text style={styles.detailLabel}>Units Allotted</Text>
-            <Text style={styles.detailValue}>{parseFloat(item.allottedUnit || 0).toFixed(4)}</Text>
+            <Text style={styles.detailValue}>
+              {parseFloat(item.allottedUnit || 0).toFixed(4)}
+            </Text>
           </View>
           <View style={styles.detailColumn}>
             <Text style={styles.detailLabel}>Settlement</Text>
@@ -675,51 +758,49 @@ const handleSwitchSIP = async () => {
     </TouchableOpacity>
   );
 
-const renderModal = (visible, animValue, onClose, title, children) => (
-  <Modal
-    visible={visible}
-    transparent={true}
-    animationType="none"
-    onRequestClose={onClose}
-    statusBarTranslucent={true}
-  >
-    <View style={styles.modalOverlay}>
-      <TouchableOpacity
-        style={styles.modalOverlayTouchable}
-        onPress={onClose}
-        activeOpacity={1}
-      />
-      <Animated.View 
-        style={[
-          styles.modalContainer, 
-          { transform: [{ translateY: animValue }] }
-        ]}
-      >
-        {/* Modal Header with Gradient */}
-        <View style={styles.modalHeader}>
-          <View style={styles.modalTitleContainer}>
-            <Text style={styles.modalTitle}>{title}</Text>
-            <View style={styles.modalTitleUnderline} />
-          </View>
-          <TouchableOpacity 
-            onPress={onClose} 
-            style={styles.closeButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <View style={styles.closeButtonCircle}>
-              <Text style={styles.closeButtonText}>×</Text>
+  const renderModal = (visible, animValue, onClose, title, children) => (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent={true}
+    >
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalOverlayTouchable}
+          onPress={onClose}
+          activeOpacity={1}
+        />
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            { transform: [{ translateY: animValue }] },
+          ]}
+        >
+          {/* Modal Header with Gradient */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>{title}</Text>
+              <View style={styles.modalTitleUnderline} />
             </View>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Modal Content */}
-        <ScrollView style={styles.modalContentWrapper}>
-          {children}
-        </ScrollView>
-      </Animated.View>
-    </View>
-  </Modal>
-);
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <View style={styles.closeButtonCircle}>
+                <Text style={styles.closeButtonText}>×</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Modal Content */}
+          <ScrollView style={styles.modalContentWrapper}>{children}</ScrollView>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -727,15 +808,18 @@ const renderModal = (visible, animValue, onClose, title, children) => (
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <SInfoSvg.BackButton />
         </TouchableOpacity>
-        {/* <TouchableOpacity onPress={() => setIsDarkTheme(!isDarkTheme)} style={styles.themeToggle}>
-          <Text style={styles.themeToggleText}>{isDarkTheme ? '☀️' : '🌙'}</Text>
-        </TouchableOpacity> */}
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.fundHeader}>
           <View style={styles.fundIconWrapper}>
             <View style={styles.fundIcon}>
@@ -747,87 +831,84 @@ const renderModal = (visible, animValue, onClose, title, children) => (
             </View>
           </View>
           <View style={styles.fundDetails}>
-            <Text style={styles.fundName}>{Data?.schemeName || 'Scheme Name Not Available'}</Text>
-            <Text style={styles.monthlyText}>{Data?.schemeCode || 'Scheme Code Not Available'}</Text>
+            <Text style={styles.fundName}>
+              {Data?.schemeName || 'Scheme Name Not Available'}
+            </Text>
+            <Text style={styles.monthlyText}>
+              {matchedData?.schemeCode || 'Scheme Code Not Available'}
+            </Text>
           </View>
         </View>
 
         <View style={styles.sipSummary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>SIP Invested Value</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(Data?.investedAmount || 0)}</Text>
+            <Text style={styles.summaryValue}>
+              {formatCurrency(matchedHolding?.currentValue || 0)}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Current NAV</Text>
-            <Text style={styles.summaryValue}>₹{Data?.currentNAV || 'N/A'}</Text>
+            <Text style={styles.summaryValue}>
+              ₹{matchedHolding?.currentNAV || 'N/A'}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Units</Text>
-            <Text style={styles.summaryValue}>{Data?.totalUnits || 'N/A'}</Text>
+            <Text style={styles.summaryValue}>
+              {matchedHolding?.displayUnits || 'N/A'}
+            </Text>
           </View>
 
           {showMoreDetails && (
             <>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Folio Number</Text>
-                <Text style={styles.summaryValue}>{Data?.folioNo || 'N/A'}</Text>
+                <Text style={styles.summaryValue}>
+                  {matchedHolding?.folioNo || 'N/A'}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Current Market Price</Text>
-                <Text style={styles.summaryValue}>₹{Data?.currentMarketPrice || 'N/A'}</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{matchedHolding?.currentValue || 'N/A'}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>NAV Date</Text>
-                <Text style={styles.summaryValue}>{formatDate(Data?.currentNavDate)}</Text>
+                <Text style={styles.summaryValue}>
+                  {matchedHolding?.currentNAV}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Registration Date</Text>
-                <Text style={styles.summaryValue}>{Data?.SIPRegnDate || 'N/A'}</Text>
+                <Text style={styles.summaryValue}>
+                  {matchedData?.SIPRegnNo || 'N/A'}
+                </Text>
               </View>
             </>
           )}
 
-          <TouchableOpacity style={styles.viewMoreButton} onPress={() => setShowMoreDetails(!showMoreDetails)}>
-            <Text style={styles.viewMoreText}>{showMoreDetails ? 'View Less' : 'View More'}</Text>
+          <TouchableOpacity
+            style={styles.viewMoreButton}
+            onPress={() => setShowMoreDetails(!showMoreDetails)}
+          >
+            <Text style={styles.viewMoreText}>
+              {showMoreDetails ? 'View Less' : 'View More'}
+            </Text>
             <SInfoSvg.UpChevron
               width={widthToDp(4)}
               height={heightToDp(3)}
-              style={{ transform: [{ rotate: showMoreDetails ? '180deg' : '0deg' }] }}
+              style={{
+                transform: [{ rotate: showMoreDetails ? '180deg' : '0deg' }],
+              }}
             />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.instalmentHeader}>
-          <Text style={styles.instalmentTitle}>SIP Instalments</Text>
-          <Text style={styles.sipId}>SIP ID: {Data?.SIPRegnNo || 'N/A'}</Text>
-        </View>
-
-        <View style={styles.instalmentsList}>
-          {Data?.installements?.length > 0 ? (
-            <FlatList
-              data={Data.installements}
-              renderItem={renderInstalment}
-              keyExtractor={(item, index) => index.toString()}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.instalmentItem}>
-              <Text style={styles.noDataText}>No installment data available</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.bottomSpacing} />
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        {/* <TouchableOpacity style={styles.reorderButton} onPress={openCustomizeModal}>
-          <Text style={styles.reorderButtonText}>Customize SIP</Text>
-        </TouchableOpacity> */}
-        <Rbutton
-          title={"Customize SIP"}
-          onPress={openCustomizeModal}
-        />
+        <Rbutton title={'Customize SIP'} onPress={openCustomizeModal} />
       </View>
       {renderModal(
         stepUpModalVisible,
@@ -841,17 +922,23 @@ const renderModal = (visible, animValue, onClose, title, children) => (
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.stepUpLabel}>Configure your SIP step-up plan</Text>
+            <Text style={styles.stepUpLabel}>
+              Configure your SIP step-up plan
+            </Text>
 
             {/* Current SIP Amount */}
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Current SIP Installment Amount *</Text>
+              <Text style={styles.formLabel}>
+                Current SIP Installment Amount *
+              </Text>
               <TextInput
                 style={styles.formInput}
                 placeholder="Enter current SIP amount (e.g., 2000)"
                 placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                value={stepUpForm.sipInstallmentAmount}
-                onChangeText={(value) => updateStepUpForm('sipInstallmentAmount', value)}
+                value={matchedHolding?.allotedAmount}
+                onChangeText={value =>
+                  updateStepUpForm('sipInstallmentAmount', value)
+                }
                 keyboardType="numeric"
               />
             </View>
@@ -860,19 +947,23 @@ const renderModal = (visible, animValue, onClose, title, children) => (
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Step-up Duration *</Text>
               <View style={styles.durationContainer}>
-                {['HALFYEARLY', 'YEARLY'].map((duration) => (
+                {['HALFYEARLY', 'YEARLY'].map(duration => (
                   <TouchableOpacity
                     key={duration}
                     style={[
                       styles.durationButton,
-                      stepUpForm.duration === duration && styles.durationButtonActive
+                      stepUpForm.duration === duration &&
+                        styles.durationButtonActive,
                     ]}
                     onPress={() => updateStepUpForm('duration', duration)}
                   >
-                    <Text style={[
-                      styles.durationButtonText,
-                      stepUpForm.duration === duration && styles.durationButtonTextActive
-                    ]}>
+                    <Text
+                      style={[
+                        styles.durationButtonText,
+                        stepUpForm.duration === duration &&
+                          styles.durationButtonTextActive,
+                      ]}
+                    >
                       {duration === 'HALFYEARLY' ? 'Half Yearly' : 'Yearly'}
                     </Text>
                   </TouchableOpacity>
@@ -887,28 +978,38 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                 <TouchableOpacity
                   style={[
                     styles.incrementTypeButton,
-                    stepUpForm.incrementType === 'percentage' && styles.incrementTypeButtonActive
+                    stepUpForm.incrementType === 'percentage' &&
+                      styles.incrementTypeButtonActive,
                   ]}
-                  onPress={() => updateStepUpForm('incrementType', 'percentage')}
+                  onPress={() =>
+                    updateStepUpForm('incrementType', 'percentage')
+                  }
                 >
-                  <Text style={[
-                    styles.incrementTypeButtonText,
-                    stepUpForm.incrementType === 'percentage' && styles.incrementTypeButtonTextActive
-                  ]}>
+                  <Text
+                    style={[
+                      styles.incrementTypeButtonText,
+                      stepUpForm.incrementType === 'percentage' &&
+                        styles.incrementTypeButtonTextActive,
+                    ]}
+                  >
                     By Percentage (%)
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.incrementTypeButton,
-                    stepUpForm.incrementType === 'amount' && styles.incrementTypeButtonActive
+                    stepUpForm.incrementType === 'amount' &&
+                      styles.incrementTypeButtonActive,
                   ]}
                   onPress={() => updateStepUpForm('incrementType', 'amount')}
                 >
-                  <Text style={[
-                    styles.incrementTypeButtonText,
-                    stepUpForm.incrementType === 'amount' && styles.incrementTypeButtonTextActive
-                  ]}>
+                  <Text
+                    style={[
+                      styles.incrementTypeButtonText,
+                      stepUpForm.incrementType === 'amount' &&
+                        styles.incrementTypeButtonTextActive,
+                    ]}
+                  >
                     By Amount (₹)
                   </Text>
                 </TouchableOpacity>
@@ -924,11 +1025,15 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                   placeholder="Enter percentage (e.g., 13)"
                   placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                   value={stepUpForm.nextSipIncrementPercentage}
-                  onChangeText={(value) => updateStepUpForm('nextSipIncrementPercentage', value)}
+                  onChangeText={value =>
+                    updateStepUpForm('nextSipIncrementPercentage', value)
+                  }
                   keyboardType="numeric"
                 />
                 <Text style={styles.helperText}>
-                  Your SIP amount will increase by {stepUpForm.nextSipIncrementPercentage || '0'}% every {stepUpForm.duration.toLowerCase()}
+                  Your SIP amount will increase by{' '}
+                  {stepUpForm.nextSipIncrementPercentage || '0'}% every{' '}
+                  {stepUpForm.duration.toLowerCase()}
                 </Text>
               </View>
             ) : (
@@ -939,11 +1044,15 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                   placeholder="Enter amount (e.g., 500)"
                   placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                   value={stepUpForm.nextSipIncrementByAmount}
-                  onChangeText={(value) => updateStepUpForm('nextSipIncrementByAmount', value)}
+                  onChangeText={value =>
+                    updateStepUpForm('nextSipIncrementByAmount', value)
+                  }
                   keyboardType="numeric"
                 />
                 <Text style={styles.helperText}>
-                  Your SIP amount will increase by ₹{stepUpForm.nextSipIncrementByAmount || '0'} every {stepUpForm.duration.toLowerCase()}
+                  Your SIP amount will increase by ₹
+                  {stepUpForm.nextSipIncrementByAmount || '0'} every{' '}
+                  {stepUpForm.duration.toLowerCase()}
                 </Text>
               </View>
             )}
@@ -953,127 +1062,150 @@ const renderModal = (visible, animValue, onClose, title, children) => (
               <Text style={styles.summaryTitle}>Step-Up Summary</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Current Amount:</Text>
-                <Text style={styles.summaryValue}>₹{stepUpForm.sipInstallmentAmount || '0'}</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{stepUpForm.sipInstallmentAmount || '0'}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Duration:</Text>
-                <Text style={styles.summaryValue}>{stepUpForm.duration === 'HALFYEARLY' ? 'Half Yearly' : 'Yearly'}</Text>
+                <Text style={styles.summaryValue}>
+                  {stepUpForm.duration === 'HALFYEARLY'
+                    ? 'Half Yearly'
+                    : 'Yearly'}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Increment:</Text>
                 <Text style={styles.summaryValue}>
                   {stepUpForm.incrementType === 'percentage'
                     ? `${stepUpForm.nextSipIncrementPercentage || '0'}%`
-                    : `₹${stepUpForm.nextSipIncrementByAmount || '0'}`
-                  }
+                    : `₹${stepUpForm.nextSipIncrementByAmount || '0'}`}
                 </Text>
               </View>
-              {stepUpForm.sipInstallmentAmount && (stepUpForm.nextSipIncrementPercentage || stepUpForm.nextSipIncrementByAmount) && (
-                <View style={[styles.summaryRow, styles.highlightRow]}>
-                  <Text style={styles.summaryLabel}>Next Amount:</Text>
-                  <Text style={[styles.summaryValue, styles.highlightValue]}>
-                    ₹{stepUpForm.incrementType === 'percentage'
-                      ? Math.round(parseFloat(stepUpForm.sipInstallmentAmount || 0) * (1 + parseFloat(stepUpForm.nextSipIncrementPercentage || 0) / 100))
-                      : (parseFloat(stepUpForm.sipInstallmentAmount || 0) + parseFloat(stepUpForm.nextSipIncrementByAmount || 0))
-                    }
-                  </Text>
-                </View>
-              )}
+              {stepUpForm.sipInstallmentAmount &&
+                (stepUpForm.nextSipIncrementPercentage ||
+                  stepUpForm.nextSipIncrementByAmount) && (
+                  <View style={[styles.summaryRow, styles.highlightRow]}>
+                    <Text style={styles.summaryLabel}>Next Amount:</Text>
+                    <Text style={[styles.summaryValue, styles.highlightValue]}>
+                      ₹
+                      {stepUpForm.incrementType === 'percentage'
+                        ? Math.round(
+                            parseFloat(stepUpForm.sipInstallmentAmount || 0) *
+                              (1 +
+                                parseFloat(
+                                  stepUpForm.nextSipIncrementPercentage || 0,
+                                ) /
+                                  100),
+                          )
+                        : parseFloat(stepUpForm.sipInstallmentAmount || 0) +
+                          parseFloat(stepUpForm.nextSipIncrementByAmount || 0)}
+                    </Text>
+                  </View>
+                )}
             </View>
 
             <Rbutton
               title="Activate Step-Up"
-              loading={loading}
+              loader={loader}
               onPress={handleStepUpSIP}
               style={styles.submitButton}
               textStyle={styles.submitButtonText}
               disabled={
-                loading ||
+                loader ||
                 !stepUpForm.sipInstallmentAmount ||
-                (stepUpForm.incrementType === 'percentage' && !stepUpForm.nextSipIncrementPercentage) ||
-                (stepUpForm.incrementType === 'amount' && !stepUpForm.nextSipIncrementByAmount)
+                (stepUpForm.incrementType === 'percentage' &&
+                  !stepUpForm.nextSipIncrementPercentage) ||
+                (stepUpForm.incrementType === 'amount' &&
+                  !stepUpForm.nextSipIncrementByAmount)
               }
             />
           </ScrollView>
-        </View>
+        </View>,
       )}
 
-    {renderModal(
-  customizeModalVisible,
-  slideAnim,
-  closeCustomizeModal,
-  'Customize Your SIP',
-  <View style={styles.modalContent}>
-    <Text style={styles.customizeSubtitle}>
-      Choose an option to manage your SIP investment
-    </Text>
-    
-    {[
-      { 
-        icon: '⏸️', 
-        title: 'Pause SIP', 
-        description: 'Temporarily pause your SIP for 1-10 months',
-        onPress: openPauseModal,
-        color: '#FFA500'
-      },
-      { 
-        icon: '❌', 
-        title: 'Cancel SIP', 
-        description: 'Permanently cancel your SIP investment',
-        onPress: openCancelModal,
-        color: '#FF4444'
-      },
-      { 
-        icon: '📈', 
-        title: 'Step-up SIP', 
-        description: 'Increase your SIP amount periodically',
-        onPress: openStepUpModal,
-        color: '#4CAF50'
-      },
-      { 
-        icon: '💰', 
-        title: 'SIP Redemption', 
-        description: 'Redeem units from your SIP investment',
-        onPress: openRedemptionModal,
-        color: '#2196F3'
-      },
-      { 
-        icon: '🔄', 
-        title: 'Switch SIP', 
-        description: 'Switch your SIP to another mutual fund scheme',
-        onPress: openSwitchModal,
-        color: '#9C27B0'
-      }
-    ].map((option, index) => (
-      <TouchableOpacity 
-        key={index} 
-        style={[
-          styles.customizeOption,
-          { borderLeftColor: option.color }
-        ]} 
-        onPress={option.onPress}
-      >
-        <View style={styles.optionContent}>
-          <View style={[
-            styles.optionIcon,
-            { backgroundColor: `${option.color}20` }
-          ]}>
-            <Text style={[styles.optionIconText, { color: option.color }]}>
-              {option.icon}
-            </Text>
-          </View>
-          <View style={styles.optionTextContainer}>
-            <Text style={styles.optionTitle}>{option.title}</Text>
-            <Text style={styles.optionDescription}>{option.description}</Text>
-          </View>
-          <View style={styles.optionArrowContainer}>
-            <Text style={styles.optionArrow}>›</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    ))}
-  </View>
-)}
+      {renderModal(
+        customizeModalVisible,
+        slideAnim,
+        closeCustomizeModal,
+        'Customize Your SIP',
+        <View style={styles.modalContent}>
+          <Text style={styles.customizeSubtitle}>
+            Choose an option to manage your SIP investment
+          </Text>
+
+          {[
+            {
+              icon: '⏸️',
+              title: 'Pause SIP',
+              description: 'Temporarily pause your SIP for 1-10 months',
+              onPress: openPauseModal,
+              color: '#FFA500',
+            },
+            {
+              icon: '❌',
+              title: 'Cancel SIP',
+              description: 'Permanently cancel your SIP investment',
+              onPress: openCancelModal,
+              color: '#FF4444',
+            },
+            {
+              icon: '📈',
+              title: 'Step-up SIP',
+              description: 'Increase your SIP amount periodically',
+              onPress: openStepUpModal,
+              color: '#4CAF50',
+            },
+            {
+              icon: '💰',
+              title: 'SIP Redemption',
+              description: 'Redeem units from your SIP investment',
+              onPress: openRedemptionModal,
+              color: '#2196F3',
+            },
+            {
+              icon: '🔄',
+              title: 'Switch SIP',
+              description: 'Switch your SIP to another mutual fund scheme',
+              onPress: openSwitchModal,
+              color: '#9C27B0',
+            },
+          ].map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.customizeOption,
+                { borderLeftColor: option.color },
+              ]}
+              onPress={option.onPress}
+            >
+              <View style={styles.optionContent}>
+                <View
+                  style={[
+                    styles.optionIcon,
+                    { backgroundColor: `${option.color}20` },
+                  ]}
+                >
+                  <Text
+                    style={[styles.optionIconText, { color: option.color }]}
+                  >
+                    {option.icon}
+                  </Text>
+                </View>
+                <View style={styles.optionTextContainer}>
+                  <Text style={styles.optionTitle}>{option.title}</Text>
+                  <Text style={styles.optionDescription}>
+                    {option.description}
+                  </Text>
+                </View>
+                <View style={styles.optionArrowContainer}>
+                  <Text style={styles.optionArrow}>›</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>,
+      )}
 
       {renderModal(
         pauseModalVisible,
@@ -1082,35 +1214,36 @@ const renderModal = (visible, animValue, onClose, title, children) => (
         'Pause Investment',
         <View style={styles.modalContent}>
           <Text style={styles.pauseLabel}>
-            Select pause duration ({pauseDuration} month{pauseDuration > 1 ? 's' : ''})
+            Select pause duration ({pauseDuration} month
+            {pauseDuration > 1 ? 's' : ''})
           </Text>
           <View style={styles.sliderContainer}>
             <CustomSlider
-              value={pauseDuration}
-              minimumValue={1}
-              maximumValue={10}
+              value={steps.indexOf(pauseDuration)}
+              minimumValue={0}
+              maximumValue={steps.length - 1}
               step={1}
-              onValueChange={value => setPauseDuration(Array.isArray(value) ? value[0] : value)}
+              onValueChange={index => setPauseDuration(steps[index])}
               style={styles.slider}
               thumbStyle={styles.thumbStyle}
               trackStyle={styles.trackStyle}
-              minimumTrackTintColor="#1768BF"
+              minimumTrackTintColor="#dfb049ff"
               maximumTrackTintColor="#d3d3d3"
               thumbTintColor={Config.Colors.primary}
             />
             <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabelText}>1</Text>
-              <Text style={styles.sliderLabelText}>10</Text>
+              <Text style={styles.sliderLabelText}>0</Text>
+              <Text style={styles.sliderLabelText}>12</Text>
             </View>
           </View>
           <Rbutton
             title="Submit"
-            loading={loading}
+            loader={loader}
             onPress={handlePauseSIP}
-          // style={styles.submitButton} // optional extra styling
-          // textStyle={styles.submitButtonText} // optional extra text styling
+            // style={styles.submitButton} // optional extra styling
+            // textStyle={styles.submitButtonText} // optional extra text styling
           />
-        </View>
+        </View>,
       )}
 
       {renderModal(
@@ -1119,7 +1252,9 @@ const renderModal = (visible, animValue, onClose, title, children) => (
         closeCancelModal,
         'Cancel SIP',
         <View style={styles.modalContent}>
-          <Text style={styles.cancelLabel}>Please select a reason for cancellation</Text>
+          <Text style={styles.cancelLabel}>
+            Please select a reason for cancellation
+          </Text>
 
           <TouchableOpacity
             style={styles.dropdownButton}
@@ -1144,7 +1279,9 @@ const renderModal = (visible, animValue, onClose, title, children) => (
 
           {selectedCancelOption === 'Others (pls specify the reason)' && (
             <View style={styles.reasonInputContainer}>
-              <Text style={styles.reasonInputLabel}>Please specify your reason:</Text>
+              <Text style={styles.reasonInputLabel}>
+                Please specify your reason:
+              </Text>
               <TextInput
                 style={styles.reasonInput}
                 placeholder="Enter your reason here..."
@@ -1155,23 +1292,26 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                 multiline
                 numberOfLines={4}
               />
-              <Text style={styles.charCount}>{otherReason.length}/184 characters</Text>
+              <Text style={styles.charCount}>
+                {otherReason.length}/184 characters
+              </Text>
             </View>
           )}
 
           <Rbutton
             title="Cancel SIP"
-            loading={loading}
+            loader={loader}
             onPress={handleCancelSIP}
             // style={styles.submitButton}
             // textStyle={styles.submitButtonText}
             disabled={
-              loading ||
+              loader ||
               !selectedCancelOption ||
-              (selectedCancelOption === 'Others (pls specify the reason)' && !otherReason.trim())
+              (selectedCancelOption === 'Others (pls specify the reason)' &&
+                !otherReason.trim())
             }
           />
-        </View>
+        </View>,
       )}
 
       {renderModal(
@@ -1183,7 +1323,6 @@ const renderModal = (visible, animValue, onClose, title, children) => (
           <ScrollView showsVerticalScrollIndicator={false}>
             {!showOtpInput ? (
               <>
-
                 {/* Installment Amount */}
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>Installment Amount *</Text>
@@ -1192,7 +1331,9 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                     placeholder="Enter amount (e.g., 2000)"
                     placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                     value={redemptionForm.installmentAmount}
-                    onChangeText={(value) => updateRedemptionForm('installmentAmount', value)}
+                    onChangeText={value =>
+                      updateRedemptionForm('installmentAmount', value)
+                    }
                     keyboardType="numeric"
                   />
                 </View>
@@ -1205,33 +1346,43 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                     placeholder="Enter number of installments (e.g., 6)"
                     placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                     value={redemptionForm.numberOfWithdrawls}
-                    onChangeText={(value) => updateRedemptionForm('numberOfWithdrawls', value)}
+                    onChangeText={value =>
+                      updateRedemptionForm('numberOfWithdrawls', value)
+                    }
                     keyboardType="numeric"
                   />
                 </View>
 
                 {/* Start Date */}
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Start Date *</Text>
+                  <Text style={styles.formLabel}>
+                    Start Date * (DD/MM/YYYY)
+                  </Text>
                   <TextInput
                     style={styles.formInput}
                     placeholder="DD/MM/YYYY"
                     placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                     value={redemptionForm.startDate}
-                    onChangeText={(value) => updateRedemptionForm('startDate', value)}
+                    onChangeText={value =>
+                      updateRedemptionForm('startDate', value)
+                    }
                     maxLength={10}
                   />
                 </View>
 
                 {/* Installment Units */}
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Installment Units (Optional)</Text>
+                  <Text style={styles.formLabel}>
+                    Installment Units (Optional)
+                  </Text>
                   <TextInput
                     style={styles.formInput}
                     placeholder="Enter units (optional)"
                     placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
                     value={redemptionForm.installmentUnits}
-                    onChangeText={(value) => updateRedemptionForm('installmentUnits', value)}
+                    onChangeText={value =>
+                      updateRedemptionForm('installmentUnits', value)
+                    }
                     keyboardType="numeric"
                   />
                 </View>
@@ -1239,12 +1390,19 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                 {/* First Order Today */}
                 <TouchableOpacity
                   style={styles.checkboxContainer}
-                  onPress={() => updateRedemptionForm('firstOrderToday', !redemptionForm.firstOrderToday)}
+                  onPress={() =>
+                    updateRedemptionForm(
+                      'firstOrderToday',
+                      !redemptionForm.firstOrderToday,
+                    )
+                  }
                 >
-                  <View style={[
-                    styles.checkbox,
-                    redemptionForm.firstOrderToday && styles.checkboxChecked
-                  ]}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      redemptionForm.firstOrderToday && styles.checkboxChecked,
+                    ]}
+                  >
                     {redemptionForm.firstOrderToday && (
                       <Text style={styles.checkboxTick}>✓</Text>
                     )}
@@ -1259,32 +1417,44 @@ const renderModal = (visible, animValue, onClose, title, children) => (
                   <Text style={styles.summaryTitle}>Redemption Summary</Text>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Frequency:</Text>
-                    <Text style={styles.summaryValue}>{redemptionForm.frequencyType}</Text>
+                    <Text style={styles.summaryValue}>
+                      {redemptionForm.frequencyType}
+                    </Text>
                   </View>
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Amount per installment:</Text>
-                    <Text style={styles.summaryValue}>₹{redemptionForm.installmentAmount || '0'}</Text>
+                    <Text style={styles.summaryLabel}>
+                      Amount per installment:
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      ₹{redemptionForm.installmentAmount || '0'}
+                    </Text>
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Total withdrawals:</Text>
-                    <Text style={styles.summaryValue}>{redemptionForm.numberOfWithdrawls || '0'}</Text>
+                    <Text style={styles.summaryValue}>
+                      {redemptionForm.numberOfWithdrawls || '0'}
+                    </Text>
                   </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Total amount:</Text>
                     <Text style={styles.summaryValue}>
-                      ₹{(parseFloat(redemptionForm.installmentAmount || 0) * parseFloat(redemptionForm.numberOfWithdrawls || 0)).toFixed(0)}
+                      ₹
+                      {(
+                        parseFloat(redemptionForm.installmentAmount || 0) *
+                        parseFloat(redemptionForm.numberOfWithdrawls || 0)
+                      ).toFixed(0)}
                     </Text>
                   </View>
                 </View>
 
                 <Rbutton
                   title="Submit Redemption"
-                  loading={loading}
+                  loader={loader}
                   onPress={handleSIPRedemption}
                   style={styles.submitButton}
                   textStyle={styles.submitButtonText}
                   disabled={
-                    loading ||
+                    loader ||
                     !redemptionForm.installmentAmount ||
                     !redemptionForm.numberOfWithdrawls ||
                     !redemptionForm.startDate
@@ -1315,162 +1485,168 @@ const renderModal = (visible, animValue, onClose, title, children) => (
 
                 <Rbutton
                   title="Verify & Complete"
-                  loading={loading}
+                  loader={loader}
                   onPress={handleOtpSubmission}
                   style={styles.submitButton}
                   textStyle={styles.submitButtonText}
-                  disabled={loading || otp.length !== 4}
+                  disabled={loader || otp.length !== 4}
                 />
 
                 <Text style={styles.otpNote}>
-                  Note: You cannot cancel this process until OTP verification is complete
+                  Note: You cannot cancel this process until OTP verification is
+                  complete
                 </Text>
               </>
             )}
           </ScrollView>
-        </View>
+        </View>,
       )}
       {renderModal(
-  switchModalVisible,
-  switchSlideAnim,
-  closeSwitchModal,
-  'Switch SIP',
-  <View style={styles.modalContent}>
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <Text style={styles.stepUpLabel}>
-        Switch your SIP investment from one scheme to another
-      </Text>
+        switchModalVisible,
+        switchSlideAnim,
+        closeSwitchModal,
+        'Switch SIP',
+        <View style={styles.modalContent}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Header */}
+            <Text style={styles.stepUpLabel}>
+              Switch your SIP investment from one scheme to another
+            </Text>
 
-      {/* From Scheme Code */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>From Scheme Code *</Text>
-        <TextInput
-          style={styles.formInput}
-          placeholder="e.g., 0202-DP"
-          placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-          value={switchForm.fromSchemeCd}
-          onChangeText={value => updateSwitchForm('fromSchemeCd', value)}
-        />
-      </View>
+            {/* From Scheme Code */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>From Scheme Code *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g., 0202-DP"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={switchForm.fromSchemeCd}
+                onChangeText={value => updateSwitchForm('fromSchemeCd', value)}
+              />
+            </View>
 
-      {/* To Scheme Code */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>To Scheme Code *</Text>
-        <TextInput
-          style={styles.formInput}
-          placeholder="e.g., B301G"
-          placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-          value={switchForm.toSchemeCd}
-          onChangeText={value => updateSwitchForm('toSchemeCd', value)}
-        />
-      </View>
+            {/* To Scheme Code */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>To Scheme Code *</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g., B301G"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={switchForm.toSchemeCd}
+                onChangeText={value => updateSwitchForm('toSchemeCd', value)}
+              />
+            </View>
 
-      {/* Switch Amount */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>Switch Amount (₹)*</Text>
-        <TextInput
-          style={styles.formInput}
-          placeholder="e.g., 100"
-          placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-          value={switchForm.switchAmount}
-          onChangeText={value => updateSwitchForm('switchAmount', value)}
-          keyboardType="numeric"
-        />
-      </View>
+            {/* Switch Amount */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Switch Amount (₹)*</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="e.g., 100"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={switchForm.switchAmount}
+                onChangeText={value => updateSwitchForm('switchAmount', value)}
+                keyboardType="numeric"
+              />
+            </View>
 
-      {/* All Units Flag */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>Switch All Units?</Text>
-        <View style={styles.durationContainer}>
-          {['Y', 'N'].map(flag => (
-            <TouchableOpacity
-              key={flag}
-              style={[
-                styles.durationButton,
-                switchForm.allUnitsFlag === flag && styles.durationButtonActive
-              ]}
-              onPress={() => updateSwitchForm('allUnitsFlag', flag)}
-            >
-              <Text
+            {/* All Units Flag */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Switch All Units?</Text>
+              <View style={styles.durationContainer}>
+                {['Y', 'N'].map(flag => (
+                  <TouchableOpacity
+                    key={flag}
+                    style={[
+                      styles.durationButton,
+                      switchForm.allUnitsFlag === flag &&
+                        styles.durationButtonActive,
+                    ]}
+                    onPress={() => updateSwitchForm('allUnitsFlag', flag)}
+                  >
+                    <Text
+                      style={[
+                        styles.durationButtonText,
+                        switchForm.allUnitsFlag === flag &&
+                          styles.durationButtonTextActive,
+                      ]}
+                    >
+                      {flag === 'Y' ? 'Yes (All Units)' : 'No (Partial)'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Buy/Sell Type */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Buy/Sell Type *</Text>
+              <View style={styles.durationContainer}>
+                {['FRESH', 'ADDITIONAL'].map(type => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.durationButton,
+                      switchForm.buySellType === type &&
+                        styles.durationButtonActive,
+                    ]}
+                    onPress={() => updateSwitchForm('buySellType', type)}
+                  >
+                    <Text
+                      style={[
+                        styles.durationButtonText,
+                        switchForm.buySellType === type &&
+                          styles.durationButtonTextActive,
+                      ]}
+                    >
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Folio Number (optional) */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Folio Number (if applicable)</Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="Enter folio number (only for Physical clients)"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={switchForm.folioNo}
+                onChangeText={value => updateSwitchForm('folioNo', value)}
+              />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Remarks</Text>
+              <TextInput
                 style={[
-                  styles.durationButtonText,
-                  switchForm.allUnitsFlag === flag && styles.durationButtonTextActive
+                  styles.formInput,
+                  { height: heightToDp(10), textAlignVertical: 'top' },
                 ]}
-              >
-                {flag === 'Y' ? 'Yes (All Units)' : 'No (Partial)'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Buy/Sell Type */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>Buy/Sell Type *</Text>
-        <View style={styles.durationContainer}>
-          {['FRESH', 'ADDITIONAL'].map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.durationButton,
-                switchForm.buySellType === type && styles.durationButtonActive
-              ]}
-              onPress={() => updateSwitchForm('buySellType', type)}
-            >
-              <Text
-                style={[
-                  styles.durationButtonText,
-                  switchForm.buySellType === type && styles.durationButtonTextActive
-                ]}
-              >
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Folio Number (optional) */}
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>Folio Number (if applicable)</Text>
-        <TextInput
-          style={styles.formInput}
-          placeholder="Enter folio number (only for Physical clients)"
-          placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-          value={switchForm.folioNo}
-          onChangeText={value => updateSwitchForm('folioNo', value)}
-        />
-      </View>
-      <View style={styles.formGroup}>
-        <Text style={styles.formLabel}>Remarks</Text>
-        <TextInput
-          style={[styles.formInput, { height: heightToDp(10), textAlignVertical: 'top' }]}
-          placeholder="Add remarks (optional)"
-          placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-          value={switchForm.remarks}
-          onChangeText={value => updateSwitchForm('remarks', value)}
-          multiline
-        />
-      </View>
-      <Rbutton
-        title="Submit Switch Request"
-        loading={loading}
-        onPress={handleSwitchSIP}
-        style={styles.submitButton}
-        textStyle={styles.submitButtonText}
-        disabled={
-          loading ||
-          !switchForm.fromSchemeCd ||
-          !switchForm.toSchemeCd ||
-          !switchForm.switchAmount
-        }
-      />
-
-    </ScrollView>
-  </View>
-)}
-
+                placeholder="Add remarks (optional)"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={switchForm.remarks}
+                onChangeText={value => updateSwitchForm('remarks', value)}
+                multiline
+              />
+            </View>
+            <Rbutton
+              title="Submit Switch Request"
+              loader={loader}
+              onPress={handleSwitchSIP}
+              style={styles.submitButton}
+              textStyle={styles.submitButtonText}
+              disabled={
+                loader ||
+                !switchForm.fromSchemeCd ||
+                !switchForm.toSchemeCd ||
+                !switchForm.switchAmount
+              }
+            />
+          </ScrollView>
+        </View>,
+      )}
     </SafeAreaView>
   );
 };
@@ -1603,16 +1779,14 @@ const getStyles = isDarkTheme =>
       paddingVertical: heightToDp(1),
       borderBottomWidth: 1,
       borderBottomColor: isDarkTheme ? '#333333' : '#e0e0e0',
-      width: "100%",
+      width: '100%',
     },
     instalmentContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    instalmentLeft: {
-
-    },
+    instalmentLeft: {},
     instalmentNumber: {
       fontSize: widthToDp(4.5),
       color: isDarkTheme ? '#ffffff' : '#000000',
@@ -1623,16 +1797,14 @@ const getStyles = isDarkTheme =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: heightToDp(1),
-      width: "100%",
+      width: '100%',
     },
-    detailColumn: {
-
-    },
-      modalContentWrapper: {
+    detailColumn: {},
+    modalContentWrapper: {
       paddingHorizontal: widthToDp(4),
       paddingBottom: heightToDp(10),
     },
-       closeButtonCircle: {
+    closeButtonCircle: {
       width: widthToDp(8),
       height: widthToDp(8),
       borderRadius: widthToDp(4),
@@ -1648,7 +1820,7 @@ const getStyles = isDarkTheme =>
       shadowRadius: 2,
       elevation: 2,
     },
-     modalTitleUnderline: {
+    modalTitleUnderline: {
       width: widthToDp(12),
       height: 3,
       backgroundColor: Config.Colors.primary,
@@ -1664,7 +1836,7 @@ const getStyles = isDarkTheme =>
       fontSize: widthToDp(3.5),
       color: isDarkTheme ? '#ffffff' : '#000000',
       fontWeight: '500',
-      textAlign: "center"
+      textAlign: 'center',
     },
     statusText: {
       color: '#4caf50',
@@ -1722,7 +1894,7 @@ const getStyles = isDarkTheme =>
       elevation: 10,
     },
     modalHeader: {
-        flexDirection: 'row',
+      flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: widthToDp(5),
@@ -1745,12 +1917,12 @@ const getStyles = isDarkTheme =>
       fontWeight: '300',
       lineHeight: widthToDp(5),
     },
-      modalTitleContainer: {
+    modalTitleContainer: {
       flex: 1,
     },
     // Customize Modal Styles
     customizeSubtitle: {
-        fontSize: widthToDp(3.8),
+      fontSize: widthToDp(3.8),
       color: isDarkTheme ? '#AAAAAA' : '#666666',
       textAlign: 'center',
       marginBottom: heightToDp(3),
@@ -1758,7 +1930,7 @@ const getStyles = isDarkTheme =>
       paddingHorizontal: widthToDp(2),
     },
     customizeOption: {
-       marginBottom: heightToDp(1.5),
+      marginBottom: heightToDp(1.5),
       borderRadius: widthToDp(3),
       backgroundColor: isDarkTheme ? '#363636' : '#FFFFFF',
       borderLeftWidth: 4,
@@ -1773,16 +1945,16 @@ const getStyles = isDarkTheme =>
       overflow: 'hidden',
     },
     optionContent: {
-     flexDirection: 'row',
+      flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: heightToDp(2),
       paddingHorizontal: widthToDp(3),
     },
-     optionArrowContainer: {
+    optionArrowContainer: {
       paddingLeft: widthToDp(2),
     },
     optionIcon: {
-       width: widthToDp(10),
+      width: widthToDp(10),
       height: widthToDp(10),
       borderRadius: widthToDp(5),
       justifyContent: 'center',
@@ -1798,14 +1970,14 @@ const getStyles = isDarkTheme =>
       elevation: 2,
     },
     optionIconText: {
-     fontSize: widthToDp(4.5),
+      fontSize: widthToDp(4.5),
       fontWeight: '600',
     },
     optionTextContainer: {
-   flex: 1,
+      flex: 1,
       justifyContent: 'center',
     },
-     optionTitle: {
+    optionTitle: {
       fontSize: widthToDp(4.2),
       fontWeight: '600',
       color: isDarkTheme ? '#FFFFFF' : '#1A1A1A',
@@ -1816,12 +1988,12 @@ const getStyles = isDarkTheme =>
       color: isDarkTheme ? '#BBBBBB' : '#666666',
       lineHeight: widthToDp(4.5),
     },
-       modalContent: {
+    modalContent: {
       paddingBottom: heightToDp(1),
-      flexGrow:1
+      flexGrow: 1,
     },
     optionArrow: {
-     fontSize: widthToDp(6),
+      fontSize: widthToDp(6),
       color: isDarkTheme ? '#666666' : '#CCCCCC',
       fontWeight: '300',
     },
@@ -1942,7 +2114,7 @@ const getStyles = isDarkTheme =>
       marginbottom: heightToDp(2),
     },
     submitButtonText: {
-      color: '#ffffff',
+      color: 'black',
       fontSize: widthToDp(4.5),
       fontWeight: '600',
     },
@@ -2522,7 +2694,7 @@ const getStyles = isDarkTheme =>
       backgroundColor: Config.Colors.primary,
       borderColor: Config.Colors.primary,
     },
-  '@media (max-width: 320)': {
+    '@media (max-width: 320)': {
       modalContainer: {
         borderTopLeftRadius: widthToDp(6),
         borderTopRightRadius: widthToDp(6),

@@ -235,7 +235,7 @@ const SipScheme = React.memo(({ navigation }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
   // search input & debounced value
-  const [searchQuery, setSearchQuery] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 800);
 
   // data & pagination state for the active view

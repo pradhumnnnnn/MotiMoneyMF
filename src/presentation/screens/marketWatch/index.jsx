@@ -276,7 +276,7 @@ import SInfoSvg from '../../svgs';
         <View
           style={{
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'start',
             marginBottom: heightToDp(2),
             alignItems: 'flex-start',
           }}
@@ -302,7 +302,7 @@ import SInfoSvg from '../../svgs';
           </View>
           <View style={{ flexDirection: 'row', gap: 1, alignItems: 'start' }}>
             <Text style={styles.fundSubtitle}>{displayData?.schemeType}</Text>
-            <Text style={styles.fundSubtitle}>{displayData?.description}</Text>
+            {/* <Text style={styles.fundSubtitle}>{displayData?.description}</Text> */}
           </View>
         </View>
 
@@ -764,7 +764,7 @@ import SInfoSvg from '../../svgs';
 
             {/* Top Shadow Overlay */}
             <LinearGradient
-              colors={['rgba(43, 141, 246, 0.8)', 'transparent']}
+              colors={['#dfb049ff', '#dfb049ff']}
               style={styles.topShadow}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   selectedDropdownModalItemText: {
-    color: '#007AFF',
+    // color: '#007AFF',
     fontWeight: '600',
   },
 

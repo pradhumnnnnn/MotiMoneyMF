@@ -389,7 +389,7 @@ function BottomTabNavigator() {
         />
         <Tab.Screen
           name={ScreenName.DashBoard}
-          component={SIPPortfolio}
+          component={InvestmentList}
           options={{
             tabBarLabel: 'Dashboard',
             unmountOnBlur: true,

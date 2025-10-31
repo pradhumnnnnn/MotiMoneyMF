@@ -123,17 +123,21 @@ const Invest = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    if (InvestData && InvestData.frequency && InvestData.frequency.length > 0) {
-      const monthlyIndex = InvestData.frequency.findIndex(freq => freq === 'MONTHLY');
-      if (monthlyIndex !== -1 && InvestData.sipMinimumInstallmentAmount) {
-        const minAmount = parseFloat(InvestData.sipMinimumInstallmentAmount[monthlyIndex] || '0');
-        setMinimumAmount(minAmount);
-        setSelectedAmount(minAmount);
-        setCustomAmount('');
-      }
+useEffect(() => {
+  if (InvestData) {
+    // ✅ If sipMinimumInstallmentAmount exists, use it directly
+    if (InvestData.sipMinimumInstallmentAmount?.length > 0) {
+      const minAmount = parseFloat(InvestData.sipMinimumInstallmentAmount[0]) || 0;
+      setMinimumAmount(minAmount);
+      setSelectedAmount(minAmount);
+      setCustomAmount('');
+    } else {
+      // fallback if array missing
+      setMinimumAmount(100);
+      setSelectedAmount(100);
     }
-  }, [InvestData]);
+  }
+}, [InvestData]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -228,18 +232,30 @@ const Invest = ({ navigation }) => {
   };
 
   const onDateChange = (event, date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
+  if (Platform.OS === 'android') {
+    setShowDatePicker(false);
+  }
+
+  if (date) {
+    const selectedDay = date.getDate();
+
+    // ✅ Restrict SIP date: disable 29, 30, 31
+    if (investmentType === 'SIP' && selectedDay > 28) {
+      // move to the 1st of next month
+      const nextMonth = new Date(date);
+      nextMonth.setMonth(date.getMonth() + 1);
+      nextMonth.setDate(1);
+      setSelectedDate(nextMonth);
+    } else {
+      setSelectedDate(date);
     }
 
-    if (date) {
-      setSelectedDate(date);
-      setErrors(prev => ({ ...prev, date: '' }));
-      if (Platform.OS === 'ios') {
-        setShowDatePicker(false);
-      }
+    setErrors(prev => ({ ...prev, date: '' }));
+    if (Platform.OS === 'ios') {
+      setShowDatePicker(false);
     }
-  };
+  }
+};
 
   const getScheduleText = () => {
     if (!selectedDate) {
