@@ -24,13 +24,12 @@ import bgVector from '../../../assets/Icons/vector.png';
 const Tracker = ({ navigation }) => {
   const dispatch = useDispatch();
   
-  // Get data from Redux instead of AsyncStorage
   const mfData = useSelector(selectMfData);
   console.log("mfData from Redux:", mfData);
   const loading = useSelector(selectMfDataLoading);
   const error = useSelector(selectMfDataError);
 
-  // Log data for debugging
+  
   useEffect(() => {
     console.log("Redux mfData:", mfData);
   }, []);
@@ -56,7 +55,7 @@ const Tracker = ({ navigation }) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -84,7 +83,7 @@ const Tracker = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -96,7 +95,7 @@ const Tracker = ({ navigation }) => {
         {/* Show loading state if needed */}
         {loading && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#f0b538" />
+            <ActivityIndicator size="large" color="#2B8DF6" />
             <Text style={styles.loadingText}>Loading your investments...</Text>
           </View>
         )}
@@ -251,12 +250,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {
@@ -457,7 +456,7 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: widthToDp(4.5),
     fontWeight: 'bold',
-    color: '#f0b538',
+    color: '#2B8DF6',
     marginRight: widthToDp(2),
   },
 

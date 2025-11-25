@@ -308,15 +308,15 @@ useEffect(() => {
         paymentMethod: paymentMethod,
       };
     }
+      console.log("Payload before API call:",payload);
 
     try {
       const Token = await getData(Config.store_key_login_details);
       console.log("Token", Token);
       const endpoint = investmentType === 'SIP'
-        ? '/api/v1/order/purchase/sip/entry'
-        : '/api/v1/order/purchase/order/entry';
+        ? '/api/v1/purchase/sip/entry'
+        : '/api/v1/purchase/order/entry';
 
-      console.log("Payload before API call:", JSON.stringify(payload), endpoint);
 
       const response = await fetch(`${Config.baseUrl}${endpoint}`, {
         method: 'POST',
@@ -648,7 +648,7 @@ useEffect(() => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -665,7 +665,7 @@ useEffect(() => {
           activeOpacity={0.7}
         >
           <View style={styles.backArrow}>
-            <SInfoSvg.BackButton />
+            <SInfoSvg.WhiteBackButton />
           </View>
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
@@ -903,11 +903,11 @@ useEffect(() => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#f0b538" />
+          <ActivityIndicator size="large" color="#2B8DF6" />
         </View>
       ) : (
         <>
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
   loadingContainer: {
     flex: 1,
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {

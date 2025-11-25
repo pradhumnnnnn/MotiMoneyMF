@@ -96,7 +96,7 @@ const SIPPortfolio = ({ navigation }) => {
 
     const Header = () => (
         <LinearGradient
-            colors={['#f0b538', '#f0b538']}
+            colors={['#2B8DF6', '#2B8DF6']}
             style={styles.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
@@ -172,7 +172,7 @@ const SIPPortfolio = ({ navigation }) => {
 
     const renderLoadingState = () => (
         <View style={styles.loadingState}>
-            <ActivityIndicator size="large" color="#f0b538" />
+            <ActivityIndicator size="large" color="#2B8DF6" />
             <Text style={styles.loadingText}>Loading your SIPs...</Text>
         </View>
     );
@@ -180,7 +180,7 @@ const SIPPortfolio = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-            <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+            <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
             
             <Header />
 
@@ -224,12 +224,12 @@ const styles = StyleSheet.create({
     },
     androidStatusBar: {
         height: StatusBar.currentHeight,
-        backgroundColor: '#f0b538',
+        backgroundColor: '#2B8DF6',
     },
 
     // Header Styles
     headerGradient: {
-        backgroundColor: '#f0b538',
+        backgroundColor: '#2B8DF6',
         paddingBottom: heightToDp(4),
     },
     headerContent: {
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     },
     activeSipsCount: {
         fontSize: widthToDp(3.5),
-        color: '#f0b538',
+        color: '#2B8DF6',
         fontWeight: '600',
     },
 
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     },
     amount: {
         fontSize: widthToDp(3.8),
-        color: '#f0b538',
+        color: '#2B8DF6',
         fontWeight: '600',
     },
     dueDateContainer: {
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     dueDate: {
         fontSize: widthToDp(4),
         fontWeight: 'bold',
-        color: '#f0b538',
+        color: '#2B8DF6',
     },
     dueDateMonth: {
         fontSize: widthToDp(2.8),

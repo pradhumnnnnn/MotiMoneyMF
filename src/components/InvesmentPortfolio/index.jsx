@@ -412,9 +412,9 @@ const styles = StyleSheet.create({
     padding: widthToDp(4),
     borderRadius: widthToDp(3),
     borderWidth: 1,
-    borderColor: '#dfb049ff',
+    borderColor: '#1768BF',
     elevation: 2,
-    shadowColor: '#dfb049ff',
+    shadowColor: '#1768BF',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: widthToDp(4.5),
     fontWeight: '600',
-    color: '#dfb049ff',
+    color: '#1768BF',
     marginBottom: heightToDp(1.5),
     textAlign: 'center',
   },
@@ -446,12 +446,12 @@ const styles = StyleSheet.create({
   summaryInvested: {
     fontSize: widthToDp(4),
     fontWeight: '600',
-    color: '#dfb049ff',
+    color: '#1768BF',
   },
   summaryCurrent: {
     fontSize: widthToDp(4),
     fontWeight: '600',
-    color: '#dfb049ff',
+    color: '#1768BF',
   },
   totalGainLoss: {
     alignItems: 'center',
@@ -499,12 +499,12 @@ const styles = StyleSheet.create({
   schemeName: {
     fontSize: widthToDp(3.8),
     fontWeight: '600',
-    color: '#dfb049ff',
+    color: '#1768BF',
     flex: 1,
     marginRight: widthToDp(2),
   },
   orderTypeContainer: {
-    backgroundColor: '#dfb049ff',
+    backgroundColor: '#1768BF',
     paddingHorizontal: widthToDp(2),
     paddingVertical: heightToDp(0.3),
     borderRadius: widthToDp(1),
@@ -546,12 +546,12 @@ const styles = StyleSheet.create({
   },
   investedAmount: {
     fontSize: widthToDp(3.8),
-    color: '#dfb049ff',
+    color: '#1768BF',
     fontWeight: '600',
   },
   currentValue: {
     fontSize: widthToDp(3.8),
-    color: '#dfb049ff',
+    color: '#1768BF',
     fontWeight: '600',
   },
   gainLossContainer: {

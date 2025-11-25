@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,257 +8,349 @@ import {
   StatusBar,
   SafeAreaView,
   Platform,
-  Image,
   BackHandler,
+  LayoutAnimation,
+  UIManager,
+  Dimensions,
 } from 'react-native';
-import { widthToDp, heightToDp } from '../../../helpers/Responsive';
-import * as Config from '../../../helpers/Config';
-import SInfoSvg from '../../../presentation/svgs';
-import InvestedPorfolio from '../../../hooks/investedPortfolio';
-import CommonHeader from '../../../components/CommonHeader';
 import { useDispatch } from 'react-redux';
+import InvestedPorfolio from '../../../hooks/investedPortfolio';
 import { setSipInterface } from '../../../store/slices/marketSlice';
 import Loader from '../../../components/handAnimation';
+import * as Config from '../../../helpers/Config';
+import { heightToDp } from '../../../helpers/Responsive';
+
+const { width } = Dimensions.get('window');
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const InvestmentList = ({ navigation }) => {
   const dispatch = useDispatch();
   const { investmentData, loading, error, refetch } = InvestedPorfolio();
-
-  const formatCurrency = amount => {
-    return `₹${parseFloat(amount ?? 0).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
+  const [activeTab, setActiveTab] = useState('all');
+  const [expandedSchemes, setExpandedSchemes] = useState({});
 
   useEffect(() => {
     const backAction = () => {
       navigation.goBack();
       return true;
     };
-
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       backAction,
     );
-
     return () => backHandler.remove();
   }, []);
 
-  const calculateGainLoss = (current, invested) => {
-    const gain = parseFloat(current ?? 0) - parseFloat(invested ?? 0);
-    const percentage = (gain / parseFloat(invested || 1)) * 100;
-    return { gain, percentage };
-  };
+  const formatCurrency = amount =>
+    `₹${parseFloat(amount ?? 0).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
-  // Extract data from new structure
-  const sipSummary = investmentData?.sipSummary;
+  // Data Extraction
+  const isEmptyData =
+    !investmentData ||
+    !investmentData.sipSummary ||
+    Object.keys(investmentData.sipSummary.schemes || {}).length === 0;
+
+  const sipSummary = investmentData?.sipSummary || {};
   const schemes = sipSummary?.schemes || {};
-  const totals = sipSummary?.totals || {};
-  
-  // Convert schemes object to array for mapping
   const schemeArray = Object.values(schemes);
-  
-  // Get SIP counts
+
   const activeSIPs = sipSummary?.activeSIPs || 0;
   const cancelledSIPs = sipSummary?.cancelledSIPs || 0;
-  const pausedSIPs = sipSummary?.pausedSIPs || 0;
-  const pendingSIPs = sipSummary?.pendingSIPs || 0;
   const totalSIPs = sipSummary?.totalSIPs || 0;
 
-  const SchemeCard = ({ scheme, idx }) => {
-    if (!scheme) return null;
-    
-    const isActive = scheme.active > 0;
-    const isCancelled = scheme.cancelled > 0;
+  const totals = investmentData?.portfolioSummary?.overall || {};
+  const totalInvested = parseFloat(totals?.invested || 0);
+  const totalCurrentValue = parseFloat(totals?.currentValue || 0);
+  const totalGainLoss = parseFloat(totals?.gainAmount || 0);
+  const totalReturnPercent = parseFloat(totals?.gainPercent || 0);
 
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          dispatch(setSipInterface(scheme));
-          navigation?.navigate('SipInterface');
-        }}
-        style={{
-          ...styles.card,
-          borderLeftColor: isActive ? Config.Colors.primary : Config.Colors.secondary,
-        }}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.schemeHeaderContent}>
-            <View style={styles.schemeInfo}>
-              <Text style={styles.schemeName} numberOfLines={2}>
-                {scheme?.schemeName ?? '-'}
-              </Text>
-              <Text style={styles.schemeCode} numberOfLines={1}>
-                {scheme?.schemeCode ?? '-'}
-              </Text>
-            </View>
-          </View>
-          <View style={[
-            styles.statusContainer,
-            isActive ? styles.activeStatus : styles.cancelledStatus
-          ]}>
-            <Text style={styles.statusText}>
-              {isActive ? 'ACTIVE' : 'CANCELLED'}
-            </Text>
-          </View>
-        </View>
+  const overallGainLoss = {
+    gain: totalGainLoss,
+    percentage: totalReturnPercent,
+  };
 
-        <View style={styles.cardBody}>
-          <View style={styles.row}>
-            <View style={styles.column}>
-              <Text style={styles.label}>ISIN</Text>
-              <Text style={styles.value}>{scheme?.ISIN ?? '-'}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text style={styles.label}>Total SIPs</Text>
-              <Text style={styles.value}>{scheme?.totalSIPs ?? 0}</Text>
-            </View>
-          </View>
-
-          <View style={styles.sipStatsRow}>
-            <View style={styles.sipStat}>
-              <Text style={styles.sipStatLabel}>Active</Text>
-              <Text style={[styles.sipStatValue, styles.activeCount]}>
-                {scheme?.active ?? 0}
-              </Text>
-            </View>
-            <View style={styles.sipStat}>
-              <Text style={styles.sipStatLabel}>Cancelled</Text>
-              <Text style={[styles.sipStatValue, styles.cancelledCount]}>
-                {scheme?.cancelled ?? 0}
-              </Text>
-            </View>
-            <View style={styles.sipStat}>
-              <Text style={styles.sipStatLabel}>Paused</Text>
-              <Text style={styles.sipStatValue}>
-                {scheme?.paused ?? 0}
-              </Text>
-            </View>
-            <View style={styles.sipStat}>
-              <Text style={styles.sipStatLabel}>Pending</Text>
-              <Text style={styles.sipStatValue}>
-                {scheme?.pending ?? 0}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
+  const getSchemeWiseSIPs = () => {
+    if (!sipSummary.schemes) return [];
+    return Object.entries(sipSummary.schemes).map(
+      ([schemeCode, schemeData]) => ({
+        schemeCode,
+        schemeName: schemeData.schemeName || 'Unnamed Scheme',
+        ISIN: schemeData.ISIN,
+        SIPs: schemeData.SIPs || [],
+        active: schemeData.active ?? 0,
+        cancelled: schemeData.cancelled ?? 0,
+        totalSIPs: schemeData.totalSIPs ?? (schemeData.SIPs || []).length,
+      }),
     );
   };
 
-  const SipSummaryCard = () => {
-    const overallGainLoss = calculateGainLoss(
-      totals?.totalCurrentValue || 0,
-      totals?.totalInvested || 0
+  const schemeWiseSIPs = getSchemeWiseSIPs();
+
+  const isSIPActive = sip => sip.status === 'active';
+  const isSIPCancelled = sip => sip.status === 'cancelled';
+  const getAllottedUnitsFromBSE = sipRegnNo => {
+    if (!investmentData?.bseAllotments || !sipRegnNo) return 0;
+    const matching = investmentData.bseAllotments.find(
+      a => a.SIPRegnNo === sipRegnNo,
     );
+    return matching ? parseFloat(matching.allottedUnit) || 0 : 0;
+  };
+  const getAllotmentData = sipRegnNo => {
+    if (!investmentData?.bseAllotments || !sipRegnNo) return null;
+    return investmentData?.bseAllotments.find(a => a.SIPRegnNo === sipRegnNo);
+  };
+
+  const toggleSchemeExpand = schemeIdx => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedSchemes(prev => ({
+      ...prev,
+      [schemeIdx]: {
+        ...(prev[schemeIdx] || { expanded: false, sips: {} }),
+        expanded: !(prev[schemeIdx]?.expanded || false),
+      },
+    }));
+  };
+
+  // UI Components
+
+  const SchemeCard = ({ scheme, index: schemeIndex }) => {
+    if (!scheme) return null;
+    const schemeSIPs = Array.isArray(scheme.SIPs) ? scheme.SIPs : [];
+    const schemeExpanded = !!expandedSchemes[schemeIndex]?.expanded;
 
     return (
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>SIP Portfolio Summary</Text>
-        
-        {/* SIP Counts */}
-        <View style={styles.sipCountsContainer}>
-          <View style={styles.sipCountRow}>
-            <View style={styles.sipCountItem}>
-              <Text style={styles.sipCountLabel}>Total SIPs</Text>
-              <Text style={styles.sipCountValue}>{totalSIPs}</Text>
-            </View>
-            <View style={styles.sipCountItem}>
-              <Text style={styles.sipCountLabel}>Active</Text>
-              <Text style={[styles.sipCountValue, styles.activeCount]}>{activeSIPs}</Text>
-            </View>
-            <View style={styles.sipCountItem}>
-              <Text style={styles.sipCountLabel}>Cancelled</Text>
-              <Text style={[styles.sipCountValue, styles.cancelledCount]}>{cancelledSIPs}</Text>
-            </View>
-             <View style={styles.sipCountItem}>
-              <Text style={styles.sipCountLabel}>Paused</Text>
-              <Text style={styles.sipCountValue}>{pausedSIPs}</Text>
-            </View>
+      <View style={styles.schemeCard}>
+        <TouchableOpacity
+          style={styles.schemeCardHeader}
+          onPress={() => toggleSchemeExpand(schemeIndex)}
+          activeOpacity={0.5}
+        >
+          <View>
+            <Text style={styles.schemeCardTitle}>{scheme.schemeName}</Text>
+            <Text style={styles.schemeCardSubtitle}>{scheme.schemeCode}</Text>
+            <Text style={styles.schemeCardSubtitleSmall}>{scheme.ISIN}</Text>
           </View>
+          <Text style={styles.arrowIcon}>{schemeExpanded ? '▲' : '▼'}</Text>
+        </TouchableOpacity>
+        <View style={styles.sipStatsRow}>
+          <Text style={styles.statPillDefault}>
+            Total SIP: {schemeSIPs.length}
+          </Text>
+          <Text style={styles.statPillActive}>
+            Active: {schemeSIPs.filter(isSIPActive).length}
+          </Text>
+          <Text style={styles.statPillCancelled}>
+            Cancelled: {schemeSIPs.filter(isSIPCancelled).length}
+          </Text>
         </View>
-
-        {/* Financial Summary */}
-        <View style={styles.financialSummary}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryColumn}>
-              <Text style={styles.summaryLabel}>Total Invested</Text>
-              <Text style={styles.summaryInvested}>
-                {formatCurrency(totals?.totalInvested || 0)}
-              </Text>
-            </View>
-            <View style={styles.summaryColumn}> 
-              <Text style={styles.summaryLabel}>Total Gain/Loss</Text>
-            <View style={styles.gainLossRow}>
-              <Text
-                style={[
-                  styles.totalGainAmount,
-                  overallGainLoss.gain >= 0 ? styles.profit : styles.loss,
-                ]}
+        {schemeExpanded &&
+          schemeSIPs.map((sip, sipIndex) => {
+            const allottedUnits = getAllottedUnitsFromBSE(sip.SIPRegnNo);
+            const allotmentData = getAllotmentData(sip.SIPRegnNo);
+            return (
+              <TouchableOpacity
+                key={`${schemeIndex}-${sipIndex}-${sip?.SIPRegnNo}`}
+                onPress={() => {
+                  dispatch(setSipInterface({ allotmentData, sip }));
+                  navigation.navigate('SipInterface');
+                }}
+                activeOpacity={0.85}
+                style={styles.sipItemCard}
               >
-                {overallGainLoss.gain >= 0 ? '+' : ''}
-                {formatCurrency(overallGainLoss.gain)}
-              </Text>
-              <Text
-                style={[
-                  styles.totalGainPercent,
-                  overallGainLoss.gain >= 0 ? styles.profit : styles.loss,
-                ]}
-              >
-                ({overallGainLoss.gain >= 0 ? '+' : ''}
-                {overallGainLoss.percentage.toFixed(2)}%)
-              </Text>
-            </View>
-            </View>
-            <View style={styles.summaryColumn}>
-              <Text style={styles.summaryLabel}>Current Value</Text>
-              <Text style={styles.summaryCurrent}>
-                {formatCurrency(totals?.totalCurrentValue || 0)}
-              </Text>
-            </View>
-          </View>
-          
-          {/* <View style={styles.totalGainLoss}>
-            <Text style={styles.summaryLabel}>Total Gain/Loss</Text>
-            <View style={styles.gainLossRow}>
-              <Text
-                style={[
-                  styles.totalGainAmount,
-                  overallGainLoss.gain >= 0 ? styles.profit : styles.loss,
-                ]}
-              >
-                {overallGainLoss.gain >= 0 ? '+' : ''}
-                {formatCurrency(overallGainLoss.gain)}
-              </Text>
-              <Text
-                style={[
-                  styles.totalGainPercent,
-                  overallGainLoss.gain >= 0 ? styles.profit : styles.loss,
-                ]}
-              >
-                ({overallGainLoss.gain >= 0 ? '+' : ''}
-                {overallGainLoss.percentage.toFixed(2)}%)
-              </Text>
-            </View>
-          </View> */}
-        </View>
+                <View style={styles.sipItemHeader}>
+                  <Text style={styles.sipItemTitle}>
+                    SIP Regn No: {sip.SIPRegnNo}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.sipStatusPill,
+                      isSIPActive(sip) && styles.statPillActive,
+                      isSIPCancelled(sip) && styles.statPillCancelled,
+                    ]}
+                  >
+                    {isSIPActive(sip)
+                      ? 'Active'
+                      : isSIPCancelled(sip)
+                      ? 'Cancelled'
+                      : 'Unknown'}
+                  </Text>
+                </View>
+                <Text style={styles.sipItemDetail}>
+                  Order: {allotmentData?.orderNo ?? '--'}
+                </Text>
+                <Text style={styles.sipItemDetail}>
+                  Allotted Units: {allottedUnits}
+                </Text>
+                <Text style={styles.sipItemDetail}>
+                  Amount: {allotmentData?.wbr2Details?.amount ?? '--'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
       </View>
     );
   };
 
+  const SipSummaryCard = () => (
+    <View style={styles.summaryCard}>
+      <View style={styles.summaryBlockRow}>
+        <View style={[styles.summaryBlock, { backgroundColor: '#EEF2FF' }]}>
+          <Text style={styles.summaryBlockLabel}>Total SIPs</Text>
+          <Text style={styles.summaryBlockValue}>{totalSIPs}</Text>
+        </View>
+        <View style={[styles.summaryBlock, { backgroundColor: '#D1FAE5' }]}>
+          <Text style={styles.summaryBlockLabel}>Active</Text>
+          <Text style={[styles.summaryBlockValue, { color: '#059669' }]}>
+            {activeSIPs}
+          </Text>
+        </View>
+        <View style={[styles.summaryBlock, { backgroundColor: '#FEE2E2' }]}>
+          <Text style={styles.summaryBlockLabel}>Cancelled</Text>
+          <Text style={[styles.summaryBlockValue, { color: '#991B1B' }]}>
+            {cancelledSIPs}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.summaryBlockRow}>
+        <View style={styles.summaryColumn}>
+          <Text style={styles.summaryBlockLabel}>Invested</Text>
+          <Text style={styles.summaryInvText}>
+            {formatCurrency(totalInvested)}
+          </Text>
+        </View>
+        <View style={styles.summaryColumn}>
+          <Text style={styles.summaryBlockLabel}>Gain/Loss</Text>
+          <Text
+            style={[
+              styles.summaryGainText,
+              overallGainLoss.gain >= 0 ? styles.gain : styles.loss,
+            ]}
+          >
+            {overallGainLoss.gain >= 0 ? '+' : ''}
+            {formatCurrency(overallGainLoss.gain)}
+          </Text>
+          <Text
+            style={[
+              styles.summaryPercentText,
+              overallGainLoss.gain >= 0 ? styles.gain : styles.loss,
+            ]}
+          >
+            ({overallGainLoss.gain >= 0 ? '+' : ''}
+            {overallGainLoss.percentage.toFixed(2)}%)
+          </Text>
+        </View>
+        <View style={styles.summaryColumn}>
+          <Text style={styles.summaryBlockLabel}>Current</Text>
+          <Text style={styles.summaryInvText}>
+            {formatCurrency(totalCurrentValue)}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const TabHeader = () => {
+    const tabs = [
+      { id: 'all', label: 'All Schemes', count: schemeArray.length },
+      {
+        id: 'active',
+        label: 'Active',
+        count: schemeArray.filter(s => s.active > 0).length,
+      },
+      {
+        id: 'cancelled',
+        label: 'Cancelled',
+        count: schemeArray.filter(s => s.cancelled > 0).length,
+      },
+    ];
+    return (
+      <View style={styles.tabRow}>
+        {tabs.map(tab => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.tabBtn, activeTab === tab.id && styles.tabBtnActive]}
+            onPress={() => setActiveTab(tab.id)}
+          >
+            <Text
+              style={[
+                styles.tabBtnTxt,
+                activeTab === tab.id && styles.tabBtnTxtActive,
+              ]}
+            >
+              {tab.label}
+            </Text>
+            <View
+              style={[
+                styles.tabBadge,
+                activeTab === tab.id && styles.tabBadgeActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.tabBadgeTxt,
+                  activeTab === tab.id && styles.tabBadgeTxtActive,
+                ]}
+              >
+                {tab.count}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const EmptyState = () => (
+    <View style={styles.emptyStateContainer}>
+      <View style={styles.emptyStateIcon}>
+        <Text style={styles.emptyStateIconText}>💼</Text>
+      </View>
+      <Text style={styles.emptyStateTitle}>No Investments Yet</Text>
+      <Text style={styles.emptyStateMessage}>
+        You haven't started any SIP investments yet. Start your investment
+        journey today!
+      </Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('SipScheme')}
+        style={styles.startBtn}
+      >
+        <Text style={styles.startBtnTxt}>Start Investing</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (loading) {
     return (
-     <Loader />
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <Loader />
+      </View>
     );
   }
 
-  if (error || !sipSummary) {
+  if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>
-          Unable to load data. Please try again.
-        </Text>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorTitle}>Unable to Load Data</Text>
+          <Text style={styles.errorMessage}>
+            Please check your internet connection and try again.
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -266,34 +358,40 @@ const InvestmentList = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      <Text style={styles.pageTitle}>
-        SIP Investment Portfolio
-      </Text>
-
-      <SipSummaryCard />
-
-      <View style={styles.schemesHeader}>
-        <Text style={styles.schemesTitle}>Investment Schemes</Text>
-        <Text style={styles.schemesCount}>{schemeArray.length} Schemes</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.navbar}>
+        <Text style={styles.navbarTitle}>My Investments</Text>
+        <Text style={styles.navbarSubtitle}>SIP Portfolio</Text>
       </View>
-
       <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+        style={{
+          flex: 1,
+          backgroundColor: '#F5F7FB',
+          marginBottom: heightToDp(8),
+        }}
       >
-        {schemeArray.map((scheme, idx) => (
-          <SchemeCard
-            idx={idx}
-            key={scheme?.schemeCode || Math.random()}
-            scheme={scheme}
-          />
-        ))}
-        
-        {schemeArray.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No investment schemes found</Text>
+        {isEmptyData ? (
+          <EmptyState />
+        ) : (
+          <View>
+            <SipSummaryCard />
+            {schemeWiseSIPs.length > 0 ? (
+              schemeWiseSIPs.map((scheme, idx) => (
+                <SchemeCard
+                  index={idx}
+                  key={scheme?.schemeCode || idx}
+                  scheme={scheme}
+                />
+              ))
+            ) : (
+              <View style={styles.emptyTabState}>
+                <Text style={styles.emptyTabStateText}>
+                  {activeTab === 'all'
+                    ? 'No investment schemes found'
+                    : `No ${activeTab} schemes found`}
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -302,272 +400,247 @@ const InvestmentList = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Config.Colors.cyan_blue,
-  },
+  container: { flex: 1, backgroundColor: '#F5F7FB' },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
   },
-  pageTitle: {
-    fontSize: widthToDp(6),
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: heightToDp(2),
-    marginBottom: heightToDp(2),
-    color: '#2C3E50',
+  navbar: {
+    paddingTop: 30,
+    backgroundColor: '#2B8DF6',
+    paddingBottom: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
   },
+  navbarTitle: {
+    fontSize: 24,
+    color: '#FFF',
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  navbarSubtitle: { fontSize: 14, color: '#B1B7C1', marginTop: 2 },
   summaryCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: widthToDp(4),
-    marginBottom: heightToDp(2),
-    padding: widthToDp(4),
-    borderRadius: widthToDp(3),
-    borderWidth: 1,
-    borderColor: '#dfb049ff',
-    elevation: 2,
-    shadowColor: '#dfb049ff',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-  },
-  summaryTitle: {
-    fontSize: widthToDp(4.5),
-    fontWeight: '600',
-    color: '#dfb049ff',
-    marginBottom: heightToDp(2),
-    textAlign: 'center',
-  },
-  sipCountsContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  sipCountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: heightToDp(1),
-  },
-  sipCountItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  sipCountLabel: {
-    fontSize: widthToDp(3.2),
-    color: '#666666',
-    marginBottom: heightToDp(0.5),
-  },
-  sipCountValue: {
-    fontSize: widthToDp(4.5),
-    fontWeight: 'bold',
-    color: '#dfb049ff',
-  },
-  activeCount: {
-    color: '#28A745',
-  },
-  cancelledCount: {
-    color: '#DC3545',
-  },
-  financialSummary: {
-    marginTop: heightToDp(1),
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: heightToDp(1.5),
-  },
-  summaryColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: widthToDp(3.2),
-    color: '#666666',
-    marginBottom: heightToDp(0.5),
-  },
-  summaryInvested: {
-    fontSize: widthToDp(4),
-    fontWeight: '600',
-    color: '#dfb049ff',
-  },
-  summaryCurrent: {
-    fontSize: widthToDp(4),
-    fontWeight: '600',
-    color: '#dfb049ff',
-  },
-  totalGainLoss: {
-    alignItems: 'center',
-    paddingTop: heightToDp(1),
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  totalGainAmount: {
-    fontSize: widthToDp(4.5),
-    fontWeight: 'bold',
-  },
-  totalGainPercent: {
-    fontSize: widthToDp(3.5),
-    fontWeight: '600',
-    marginLeft: widthToDp(1),
-  },
-  profit: {
-    color: '#28A745',
-  },
-  loss: {
-    color: '#DC3545',
-  },
-  schemesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: widthToDp(4),
-    marginBottom: heightToDp(1),
-  },
-  schemesTitle: {
-    fontSize: widthToDp(4.2),
-    fontWeight: '600',
-    color: '#2C3E50',
-  },
-  schemesCount: {
-    fontSize: widthToDp(3.5),
-    color: '#666666',
-  },
-  scrollContainer: {
-    flex: 1,
-    paddingHorizontal: widthToDp(4),
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: widthToDp(3),
-    marginBottom: heightToDp(2),
+    margin: 20,
+    padding: 22,
+    borderRadius: 16,
+    backgroundColor: '#FFF',
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    borderLeftWidth: widthToDp(1),
+    shadowColor: '#0003',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
-  cardHeader: {
-    backgroundColor: '#F8F9FF',
-    paddingHorizontal: widthToDp(4),
-    paddingVertical: heightToDp(1.5),
-    borderTopLeftRadius: widthToDp(3),
-    borderTopRightRadius: widthToDp(3),
+  summaryBlockRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  schemeHeaderContent: {
+  summaryBlock: {
     flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 4,
+    borderRadius: 12,
+    paddingVertical: 18,
+  },
+  summaryBlockLabel: {
+    fontSize: 13,
+    color: '#3F3E59',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  summaryBlockValue: { fontSize: 18, color: '#212134', fontWeight: '700' },
+  summaryColumn: { flex: 1, alignItems: 'center' },
+  summaryInvText: {
+    fontSize: 15,
+    color: '#292929',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  summaryGainText: { fontSize: 15, fontWeight: 'bold', marginTop: 2 },
+  summaryPercentText: { fontSize: 12, marginTop: 1, fontWeight: '500' },
+  gain: { color: '#059669' },
+  loss: { color: '#EF4444' },
+  tabRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    justifyContent: 'space-evenly',
+    marginHorizontal: 16,
+    marginTop: 2,
+    marginBottom: 12,
   },
-  schemeInfo: {
-    flex: 1,
+  tabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: '#E0E7FF',
+    marginHorizontal: 4,
   },
-  schemeName: {
-    fontSize: widthToDp(3.8),
+  tabBtnActive: { backgroundColor: '#4F46E5' },
+  tabBtnTxt: {
+    color: '#4F46E5',
+    fontSize: 15,
     fontWeight: '600',
-    color: '#dfb049ff',
-    marginBottom: heightToDp(0.2),
+    marginRight: 8,
   },
-  schemeCode: {
-    fontSize: widthToDp(3),
-    color: '#666666',
-    fontWeight: '400',
+  tabBtnTxtActive: { color: '#FFF' },
+  tabBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 11,
+    backgroundColor: '#E0E7FF',
   },
-  statusContainer: {
-    paddingHorizontal: widthToDp(2),
-    paddingVertical: heightToDp(0.5),
-    borderRadius: widthToDp(1),
-    marginLeft: widthToDp(2),
+  tabBadgeActive: { backgroundColor: '#6366F1' },
+  tabBadgeTxt: { color: '#4F46E5', fontWeight: '700', fontSize: 12 },
+  tabBadgeTxtActive: { color: '#FFF' },
+  schemeCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    marginHorizontal: 19,
+    marginBottom: 18,
+    elevation: 2,
+    shadowColor: '#0002',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
-  activeStatus: {
-    backgroundColor: '#28A745',
-  },
-  cancelledStatus: {
-    backgroundColor: '#DC3545',
-  },
-  statusText: {
-    fontSize: widthToDp(2.8),
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  cardBody: {
-    padding: widthToDp(4),
-  },
-  row: {
+  schemeCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: heightToDp(1.5),
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
-  column: {
-    flex: 1,
+  schemeCardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#292929',
+    marginBottom: 2,
   },
-  label: {
-    fontSize: widthToDp(3),
-    color: '#666666',
-    marginBottom: heightToDp(0.3),
+  schemeCardSubtitle: { fontSize: 13, color: '#757E8A', fontWeight: '500' },
+  schemeCardSubtitleSmall: {
+    fontSize: 11,
+    color: '#D1D5DB',
+    fontWeight: '600',
   },
-  value: {
-    fontSize: widthToDp(3.5),
-    color: '#333333',
-    fontWeight: '500',
-  },
+  arrowIcon: { fontSize: 17, color: '#6366F1', fontWeight: 'bold' },
   sipStatsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: heightToDp(1),
-    paddingTop: heightToDp(1),
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  sipStat: {
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    flex: 1,
+    marginTop: -5,
+    marginBottom: 12,
   },
-  sipStatLabel: {
-    fontSize: widthToDp(2.8),
-    color: '#666666',
-    marginBottom: heightToDp(0.3),
+  statPillDefault: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 15,
+    paddingHorizontal: 18,
+    paddingVertical: 5,
+    fontSize: 13,
+    color: '#374151',
+    fontWeight: '700',
+    marginHorizontal: 2,
   },
-  sipStatValue: {
-    fontSize: widthToDp(3.2),
-    fontWeight: '600',
-    color: '#dfb049ff',
+  statPillActive: {
+    backgroundColor: '#D1FAE5',
+    color: '#059669',
+    paddingHorizontal: 9,
+    borderRadius: 15,
   },
-  gainLossRow: {
+  statPillCancelled: {
+    backgroundColor: '#FEE2E2',
+    color: '#991B1B',
+    paddingHorizontal: 9,
+    borderRadius: 15,
+  },
+  sipItemCard: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    padding: 13,
+    elevation: 2,
+  },
+  sipItemHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sipItemTitle: { fontWeight: '700', fontSize: 15, color: '#334155' },
+  sipStatusPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 14,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6842FF',
+    backgroundColor: '#EDE9FE',
+  },
+  sipItemDetail: {
+    fontSize: 12,
+    color: '#4B5563',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  emptyStateContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 100,
   },
-  loadingText: {
-    fontSize: widthToDp(4),
-    textAlign: 'center',
-    marginTop: heightToDp(20),
-    color: '#666666',
-  },
-  errorText: {
-    fontSize: widthToDp(4),
-    textAlign: 'center',
-    marginTop: heightToDp(20),
-    color: '#DC3545',
-  },
-  emptyState: {
+  emptyStateIcon: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: widthToDp(8),
+    marginBottom: 15,
   },
-  emptyStateText: {
-    fontSize: widthToDp(3.8),
-    color: '#666666',
+  emptyStateIconText: { fontSize: 36 },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
+  },
+  emptyStateMessage: {
+    color: '#6B7280',
+    fontSize: 14,
     textAlign: 'center',
+    marginBottom: 14,
   },
+  startBtn: {
+    backgroundColor: '#4F46E5',
+    borderRadius: 9,
+    paddingVertical: 9,
+    paddingHorizontal: 25,
+  },
+  startBtnTxt: { color: '#FFF', fontWeight: '700', fontSize: 16 },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  errorIcon: { fontSize: 50, marginBottom: 12 },
+  errorTitle: { fontSize: 23, fontWeight: 'bold', color: '#222' },
+  errorMessage: {
+    color: '#6B7280',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 13,
+  },
+  retryButton: {
+    backgroundColor: '#4F46E5',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  retryButtonText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
+  emptyTabState: { alignItems: 'center', paddingVertical: 25 },
+  emptyTabStateText: { fontSize: 15, color: '#777', fontWeight: '500' },
 });
 
 export default InvestmentList;

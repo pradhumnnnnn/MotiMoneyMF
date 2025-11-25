@@ -201,7 +201,7 @@ const PanVerify = ({ navigation }) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -230,7 +230,7 @@ const PanVerify = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -355,12 +355,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {

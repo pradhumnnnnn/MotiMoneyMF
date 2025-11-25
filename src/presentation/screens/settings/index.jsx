@@ -25,7 +25,7 @@ import bgVector from '../../../assets/Icons/vector.png';
 // Profile data array with proper icons
 const Profile_Data = [
   {
-    id: 10,
+    id: 0,
     name: 'Account',
     icon: SInfoSvg.Account,
     route: 'Account',
@@ -40,39 +40,39 @@ const Profile_Data = [
   },
   {
     id: 2,
-    name: 'Transaction History',
+    name: 'Order Status',
     icon: SInfoSvg.Transaction,
     route: 'Transaction',
     color: '#FF9800',
   },
   {
-    id: 7,
+    id: 3,
     name: 'Tools & Calculator',
     icon: SInfoSvg.Calc,
     route: 'ToolsAndCalc',
     color: '#9C27B0',
   },
   {
-    id: 0,
+    id: 4,
     name: 'Reports',
     icon: SInfoSvg.Report,
     route: 'ReportScreen',
     color: '#607D8B',
   },
   {
-    id: 0,
+    id: 5,
     name: 'Change Password',
     icon: SInfoSvg.PassKey,
     route: 'ChangePassword',
     color: '#795548',
   },
-  {
-    id: 8,
-    name: 'Biometric Settings',
-    icon: SInfoSvg.BiometricIcon,
-    route: 'Biometric',
-    color: '#00BCD4',
-  },
+  // {
+  //   id: 6,
+  //   name: 'Biometric Settings',
+  //   icon: SInfoSvg.BiometricIcon,
+  //   route: 'Biometric',
+  //   color: '#00BCD4',
+  // },
 ];
 
 export default function Setting({ navigation }) {
@@ -138,7 +138,7 @@ export default function Setting({ navigation }) {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -215,7 +215,7 @@ export default function Setting({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -319,12 +319,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {

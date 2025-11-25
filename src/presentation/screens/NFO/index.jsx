@@ -19,7 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import bgVector from '../../../assets/Icons/vector.png';
 import * as Config from '../../../helpers/Config';
 import { apiGetService } from '../../../helpers/services';
-import { setMarketData } from '../../../store/slices/marketSlice';
+import { setInvestment, setMarketData } from '../../../store/slices/marketSlice';
 import { useDispatch } from 'react-redux';
 
 const NFO = () => {
@@ -81,22 +81,22 @@ const transformNFOData = (apiData, tab) => {
   }
 
   const filteredData = sourceData
-    // .filter(item => {
-    //   const openDate = new Date(item.startDate || item.openDate);
-    //   const closeDate = new Date(item.endDate || item.closeDate);
-    //   if (isNaN(openDate) || isNaN(closeDate)) return false;
+    .filter(item => {
+      const openDate = new Date(item.startDate || item.openDate);
+      const closeDate = new Date(item.endDate || item.closeDate);
+      if (isNaN(openDate) || isNaN(closeDate)) return false;
 
-    //   // Condition 1: Open date should be within the last 20 days
-    //   const diffOpenDays = (currentDate - openDate) / (1000 * 60 * 60 * 24);
-    //   const isRecentOpen = diffOpenDays <= 20 && diffOpenDays >= 0;
+      // Condition 1: Open date should be within the last 20 days
+      const diffOpenDays = (currentDate - openDate) / (1000 * 60 * 60 * 24);
+      const isRecentOpen = diffOpenDays <= 20 && diffOpenDays >= 0;
 
-    //   // Condition 2: Close date should NOT be within next 4-5 days
-    //   const diffCloseDays = (closeDate - currentDate) / (1000 * 60 * 60 * 24);
-    //   const isClosingSoon = diffCloseDays <= 5 && diffCloseDays >= 0;
+      // Condition 2: Close date should NOT be within next 4-5 days
+      const diffCloseDays = (closeDate - currentDate) / (1000 * 60 * 60 * 24);
+      const isClosingSoon = diffCloseDays <= 5 && diffCloseDays >= 0;
 
-    //   // Show only if recently opened and not closing soon
-    //   return isRecentOpen && !isClosingSoon;
-    // })
+      // Show only if recently opened and not closing soon
+      return isRecentOpen && !isClosingSoon;
+    })
     .map((item, index) => ({
       id: item._id || `nfo-${index}-${Date.now()}`,
       schemeName: item.schemeName || 'N/A',
@@ -200,7 +200,7 @@ const transformNFOData = (apiData, tab) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -268,6 +268,7 @@ const transformNFOData = (apiData, tab) => {
       activeOpacity={0.8}
         onPress={() => {
               dispatch(setMarketData(item?.originalData));
+              dispatch(setInvestment(item?.originalData));
               navigation.navigate('MarketWatch');
             }}
     >
@@ -339,6 +340,7 @@ const transformNFOData = (apiData, tab) => {
             ]}
         onPress={() => {
               dispatch(setMarketData(item?.originalData));
+               dispatch(setInvestment(item?.originalData));
               navigation.navigate('MarketWatch');
             }}
             disabled={activeTab === 'LIVE' && item.purchaseAllowed !== 'Y'}
@@ -378,7 +380,7 @@ const transformNFOData = (apiData, tab) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -403,7 +405,7 @@ const transformNFOData = (apiData, tab) => {
       <View style={styles.content}>
         {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#f0b538" />
+            <ActivityIndicator size="large" color="#2B8DF6" />
             <Text style={styles.loadingText}>Loading NFOs...</Text>
           </View>
         ) : error && nfoData.length === 0 ? (
@@ -423,8 +425,8 @@ const transformNFOData = (apiData, tab) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={['#f0b538']}
-                tintColor="#f0b538"
+                colors={['#2B8DF6']}
+                tintColor="#2B8DF6"
               />
             }
           />
@@ -441,10 +443,10 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {
@@ -494,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: widthToDp(2),
   },
   activeTab: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
   tabText: {
     fontSize: widthToDp(3.5),
@@ -636,7 +638,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   investButton: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingHorizontal: widthToDp(4),
     paddingVertical: heightToDp(1.2),
     borderRadius: widthToDp(2),
@@ -681,7 +683,7 @@ const styles = StyleSheet.create({
     marginBottom: heightToDp(2),
   },
   retryButton: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingHorizontal: widthToDp(6),
     paddingVertical: heightToDp(1.5),
     borderRadius: widthToDp(2),

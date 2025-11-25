@@ -25,14 +25,12 @@ import CustomSlider from '../CustomSlider';
 import { apiPostService } from '../../helpers/services';
 import { getData } from '../../helpers/localStorage';
 import Rbutton from '../Rbutton';
-import InvestedPorfolio from '../../hooks/investedPortfolio';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const SipInterface = ({ navigation }) => {
   const Data = useSelector(state => state.marketWatch.sipInterface);
-  // console.log('SIP INTERFACE', Data);
-  const { investmentData, loading, error, refetch } = InvestedPorfolio();
+  console.log('SIP INTERFACE', Data);
   // console.log('SIP INTERFACE INSIDE', investmentData);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
@@ -50,12 +48,12 @@ const SipInterface = ({ navigation }) => {
   const [otp, setOtp] = useState('');
   const [redemptionSlideAnim] = useState(new Animated.Value(screenHeight));
   const [redemptionForm, setRedemptionForm] = useState({
-    frequencyType: 'MONTHLY',
-    installmentAmount: '',
-    numberOfWithdrawls: '',
-    startDate: '',
-    installmentUnits: '',
-    firstOrderToday: false,
+    clientCode: '',
+    schemeCode: '',
+    folioNo: '',
+    allUnitsFlag: 'N',
+    redemptionAmount: '',
+    redemptionUnits: '',
   });
   const [stepUpModalVisible, setStepUpModalVisible] = useState(false);
   const [stepUpSlideAnim] = useState(new Animated.Value(screenHeight));
@@ -98,23 +96,26 @@ const SipInterface = ({ navigation }) => {
     folioNo: '', // Required only for physical clients
     remarks: 'Client initiated switch order',
   });
-  const [matchedHolding, setMatchedHolding] = useState(null);
-  const [matchedData, setMatchedData] = useState(null);
 
   useEffect(() => {
-    if (investmentData?.holdings && Data?.ISIN) {
-      const found = investmentData.holdings.find(h => h?.ISIN === Data?.ISIN);
-      setMatchedHolding(found);
-      console.log('MATCHED DATA', found);
+    console.log('ALLTTED UNITS', Data?.allotmentData?.allottedUnit);
+    if (Data?.allotmentData) {
+      setRedemptionForm(prev => ({
+        ...prev,
+        clientCode: '',
+        schemeCode: Data?.allotmentData?.schemeCode || '',
+        folioNo: Data?.allotmentData?.folioNo || '',
+        allUnitsFlag: 'N',
+        redemptionAmount: '',
+        redemptionUnits: Data?.allotmentData?.allottedUnit || '',
+      }));
+      setSwitchForm(prev => ({
+        ...prev,
+        fromSchemeCd: Data?.allotmentData?.schemeCode || '',
+        folioNo: Data?.allotmentData?.folioNo || '',
+      }));
     }
-    if (investmentData?.holdings && Data?.ISIN) {
-      const found = investmentData.bseAllotments.find(
-        h => h?.ISIN === Data?.ISIN,
-      );
-      setMatchedData(found);
-      console.log('MATCHED DATA', found);
-    }
-  }, [investmentData, Data]);
+  }, []);
 
   const openSwitchModal = () => {
     closeCustomizeModal();
@@ -198,19 +199,22 @@ const SipInterface = ({ navigation }) => {
   };
 
   const handlePauseSIP = async () => {
-    if (!matchedData?.SIPRegnNo) {
+    if (!Data?.allotmentData?.SIPRegnNo) {
       showResponseMessage('Error', 'SIP Registration Number not found', false);
       return;
     }
 
     setLoading(true);
-    console.log('VALUES', matchedData.SIPRegnNo);
+    console.log('VALUES', Data?.allotmentData?.SIPRegnNo);
+    console.log('PAUSE RES', {
+      sipRegistrationNumber: Data?.allotmentData?.SIPRegnNo,
+      pauseInstNumber: String(pauseDuration),
+    });
     try {
-      const response = await apiPostService('/api/v1/order/pause/sip/entry', {
-        sipRegistrationNumber: matchedData.SIPRegnNo,
+      const response = await apiPostService('/api/v1/pause/sip/entry', {
+        sipRegistrationNumber: Data?.allotmentData?.SIPRegnNo,
         pauseInstNumber: String(pauseDuration),
       });
-      console.log('PAUSE RES', response);
       const isSuccess = response?.status === 200 || response?.status === 201;
 
       if (isSuccess) {
@@ -257,22 +261,26 @@ const SipInterface = ({ navigation }) => {
       return;
     }
 
-    if (!matchedData?.SIPRegnNo) {
+    if (!Data?.allotmentData?.SIPRegnNo) {
       showResponseMessage('Error', 'SIP Registration Number not found', false);
       return;
     }
-
     setLoading(true);
     try {
       const clientCode = await getData('clientCode');
       const cancelReasonIndex = cancelOptions.findIndex(
         option => option === selectedCancelOption,
       );
+      console.log('CANCEL RES', {
+        xsipRegistrationID: Data?.allotmentData?.SIPRegnNo,
+        remarks: '',
+        ceaseBseCode: String(cancelReasonIndex + 1).padStart(2, '0'),
+      });
 
       const response = await apiPostService(
-        '/api/v1/order/cancellation/sip/entry',
+        '/api/v1/cancellation/sip/entry',
         {
-          xsipRegistrationID: matchedData.SIPRegnNo,
+          xsipRegistrationID: Data?.allotmentData?.SIPRegnNo,
           remarks: '',
           ceaseBseCode: String(cancelReasonIndex + 1).padStart(2, '0'),
         },
@@ -323,141 +331,9 @@ const SipInterface = ({ navigation }) => {
       setRedemptionModalVisible(false);
       setShowOtpInput(false);
       setOtp('');
-      setRedemptionForm({
-        frequencyType: 'MONTHLY',
-        installmentAmount: '',
-        numberOfWithdrawls: '',
-        startDate: '',
-        installmentUnits: '',
-        firstOrderToday: false,
-      });
     });
   };
 
-  const handleSIPRedemption = async () => {
-    if (!matchedData?.schemeCode) {
-      showResponseMessage('Error', 'Scheme Code not found', false);
-      return;
-    }
-
-    if (
-      !redemptionForm.installmentAmount ||
-      !redemptionForm.numberOfWithdrawls ||
-      !redemptionForm.startDate
-    ) {
-      showResponseMessage('Error', 'Please fill all required fields', false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const clientCode = await getData('clientCode');
-      const response = await apiPostService(
-        '/api/v1/order/redeem/registration/swp/auth',
-        {
-          schemaCode: matchedData.schemeCode,
-          frequencyType: 'MONTHLY',
-          installmentAmount: redemptionForm.installmentAmount,
-          numberOfWithdrawls: redemptionForm.numberOfWithdrawls,
-          startDate: redemptionForm.startDate,
-          installmentUnits: redemptionForm.installmentUnits,
-          firstOrderToday: redemptionForm.firstOrderToday,
-        },
-        {
-          headers: { clientCode },
-        },
-      );
-
-      if (response?.status === 200 || response?.status === 201) {
-        showResponseMessage(
-          'OTP Sent',
-          'OTP has been sent for verification. Please enter the 4-digit OTP to complete your redemption.',
-        );
-        setShowOtpInput(true);
-      } else {
-        showResponseMessage(
-          'Error',
-          response?.data?.message ||
-            'Failed to initiate redemption. Please try again.',
-          false,
-        );
-      }
-    } catch (error) {
-      console.error('Failed to initiate redemption:', error);
-      showResponseMessage(
-        'Error',
-        error?.response?.data?.message ||
-          'Network error. Please check your connection and try again.',
-        false,
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpSubmission = async () => {
-    if (!otp || otp.length !== 4) {
-      showResponseMessage('Error', 'Please enter a valid 4-digit OTP', false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const clientCode = await getData('clientCode');
-      const response = await apiPostService(
-        '/api/v1/order/redeem/registration/swp',
-        {
-          otp: otp,
-          schemaCode: matchedData.schemeCode,
-          // frequencyType: redemptionForm.frequencyType,
-          frequencyType: 'MONTHLY',
-          installmentAmount: redemptionForm.installmentAmount,
-          numberOfWithdrawls: redemptionForm.numberOfWithdrawls,
-          startDate: redemptionForm.startDate,
-          installmentUnits: redemptionForm.installmentUnits,
-          firstOrderToday: redemptionForm.firstOrderToday,
-        },
-        {
-          headers: { clientCode },
-        },
-      );
-
-      if (response?.status === 200 || response?.status === 201) {
-        showResponseMessage(
-          'Success',
-          response?.data?.message || 'SIP Redemption completed successfully!',
-        );
-        setRedemptionModalVisible(false);
-        setShowOtpInput(false);
-        setOtp('');
-        setRedemptionForm({
-          frequencyType: 'MONTHLY',
-          installmentAmount: '',
-          numberOfWithdrawls: '',
-          startDate: '',
-          installmentUnits: '',
-          firstOrderToday: false,
-        });
-      } else {
-        showResponseMessage(
-          'Error',
-          response?.data?.message ||
-            'Invalid OTP or redemption failed. Please try again.',
-          false,
-        );
-      }
-    } catch (error) {
-      console.error('Failed to verify OTP:', error);
-      showResponseMessage(
-        'Error',
-        error?.response?.data?.message ||
-          'Network error. Please check your connection and try again.',
-        false,
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleSwitchSIP = async () => {
     // ✅ Validate required fields
     if (
@@ -471,12 +347,8 @@ const SipInterface = ({ navigation }) => {
 
     setLoading(true);
     try {
-      // ✅ Get clientCode from local storage
-      const clientCode = await getData('clientCode');
-
-      // ✅ Prepare payload based on API structure
       const payload = {
-        fromSchemeCd: Data.schemeCode,
+        fromSchemeCd: Data?.allotmentData?.schemeCode || '',
         toSchemeCd: switchForm.toSchemeCd,
         switchAmount: switchForm.switchAmount,
         allUnitsFlag: switchForm.allUnitsFlag,
@@ -484,15 +356,13 @@ const SipInterface = ({ navigation }) => {
         folioNo: switchForm.folioNo, // required only for Physical clients
         remarks: switchForm.remarks || 'Client initiated switch order',
       };
-
+      console.log('🛰️ Switch SIP Payload:', payload);
       // ✅ Call API using existing service
       const response = await apiPostService(
         '/api/v1/mutualfund/switch-order',
         payload,
         {
           headers: {
-            Authorization: authToken, // make sure you have this token available
-            clientCode,
             'Content-Type': 'application/json',
           },
         },
@@ -514,6 +384,67 @@ const SipInterface = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Switch SIP API error:', error);
+      showResponseMessage(
+        'Error',
+        error?.response?.data?.message ||
+          'Network error. Please check your connection and try again.',
+        false,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  // ✅ Redemption API Function
+  const handleRedemptionSubmit = async () => {
+    if (!redemptionForm.redemptionUnits) {
+      showResponseMessage('Error', 'Please enter redemption units', false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const clientCode = await getData('clientCode');
+
+      const payload = {
+        clientCode: clientCode,
+        schemeCode: Data?.allotmentData?.schemeCode,
+        folioNo: Data?.allotmentData?.folioNo,
+        allUnitsFlag: 'N',
+        redemptionAmount: '',
+        redemptionUnits: redemptionForm.redemptionUnits,
+      };
+
+      console.log('🛰️ Redemption Payload:', payload);
+
+      const response = await apiPostService(
+        '/api/v1/redemption/entry',
+        payload,
+        {
+          headers: { clientCode },
+        },
+      );
+
+      const isSuccess = response?.status === 200 || response?.status === 201;
+
+      if (isSuccess) {
+        showResponseMessage(
+          'Success',
+          response?.data?.message ||
+            `Redemption of ${payload.redemptionUnits} units submitted successfully!`,
+        );
+        closeRedemptionModal();
+        setRedemptionForm({
+          redemptionUnits: '',
+        });
+      } else {
+        showResponseMessage(
+          'Error',
+          response?.data?.message || 'Failed to submit redemption request.',
+          false,
+        );
+      }
+    } catch (error) {
+      console.error('❌ Redemption Error:', error);
       showResponseMessage(
         'Error',
         error?.response?.data?.message ||
@@ -554,7 +485,7 @@ const SipInterface = ({ navigation }) => {
   };
 
   const handleStepUpSIP = async () => {
-    if (!matchedData?.schemeCode) {
+    if (!Data?.allotmentData?.schemeCode) {
       showResponseMessage('Error', 'Scheme Code not found', false);
       return;
     }
@@ -585,11 +516,17 @@ const SipInterface = ({ navigation }) => {
     }
 
     setLoading(true);
+    console.log('STEP UP VALUES', {
+      schemaCode: Data?.allotmentData?.schemeCode,
+      sipOrderId: Data?.allotmentData?.SIPRegnNo || '12345', // Use actual SIP ID or fallback
+      duration: stepUpForm.duration,
+      sipInstallmentAmount: stepUpForm.sipInstallmentAmount,
+    });
     try {
       const clientCode = await getData('clientCode');
       const requestBody = {
-        schemaCode: matchedData?.schemeCode,
-        sipOrderId: matchedData?.SIPRegnNo || '12345', // Use actual SIP ID or fallback
+        schemaCode: Data?.allotmentData?.schemeCode,
+        sipOrderId: Data?.allotmentData?.orderNo || '12345', // Use actual SIP ID or fallback
         duration: stepUpForm.duration,
         sipInstallmentAmount: stepUpForm.sipInstallmentAmount,
       };
@@ -604,7 +541,7 @@ const SipInterface = ({ navigation }) => {
       }
 
       const response = await apiPostService(
-        '/api/v1/order/stepup/sip/entry',
+        '/api/v1/stepup/sip/entry',
         requestBody,
         {
           headers: { clientCode },
@@ -757,6 +694,67 @@ const SipInterface = ({ navigation }) => {
       </Text>
     </TouchableOpacity>
   );
+// ========== CUSTOMIZE OPTION CONDITIONAL LOGIC ==========
+
+const sipStatus = Data?.sip?.status;
+const allottedUnits = parseFloat(Data?.allotmentData?.allottedUnit || 0);
+
+let customizeOptions = [];
+
+if (sipStatus === 'cancelled' && allottedUnits > 0) {
+  // Case 1 → SIP Cancelled + has units → Only Redemption
+  customizeOptions = [
+    {
+      icon: '💰',
+      title: 'SIP Redemption',
+      description: 'Redeem units from your SIP investment',
+      onPress: openRedemptionModal,
+      color: '#2196F3',
+    },
+  ];
+} else if (sipStatus === 'cancelled' && allottedUnits <= 0) {
+  // Case 2 → SIP Cancelled + 0 units → Show info
+  customizeOptions = 'NO_UNITS';
+} else {
+  // Case 3 → SIP Active → Show all options normally
+  customizeOptions = [
+    {
+      icon: '⏸️',
+      title: 'Pause SIP',
+      description: 'Temporarily pause your SIP for 1–10 months',
+      onPress: openPauseModal,
+      color: '#FFA500',
+    },
+    {
+      icon: '❌',
+      title: 'Cancel SIP',
+      description: 'Permanently cancel your SIP investment',
+      onPress: openCancelModal,
+      color: '#FF4444',
+    },
+    {
+      icon: '📈',
+      title: 'Step-up SIP',
+      description: 'Increase your SIP amount periodically',
+      onPress: openStepUpModal,
+      color: '#4CAF50',
+    },
+    {
+      icon: '💰',
+      title: 'SIP Redemption',
+      description: 'Redeem units from your SIP investment',
+      onPress: openRedemptionModal,
+      color: '#2196F3',
+    },
+    {
+      icon: '🔄',
+      title: 'Switch SIP',
+      description: 'Switch your SIP to another scheme',
+      onPress: openSwitchModal,
+      color: '#9C27B0',
+    },
+  ];
+}
 
   const renderModal = (visible, animValue, onClose, title, children) => (
     <Modal
@@ -824,7 +822,9 @@ const SipInterface = ({ navigation }) => {
           <View style={styles.fundIconWrapper}>
             <View style={styles.fundIcon}>
               <Image
-                source={{ uri: Data?.amcLogoUrl }}
+                source={{
+                  uri: 'https://cdn5.vectorstock.com/i/1000x1000/44/19/mutual-fund-vector-7404419.jpg',
+                }}
                 style={{ width: 40, height: 40, borderRadius: 25 }}
                 resizeMode="contain"
               />
@@ -832,10 +832,34 @@ const SipInterface = ({ navigation }) => {
           </View>
           <View style={styles.fundDetails}>
             <Text style={styles.fundName}>
-              {Data?.schemeName || 'Scheme Name Not Available'}
+              {Data?.allotmentData?.schemeName || 'Scheme Name Not Available'}
             </Text>
             <Text style={styles.monthlyText}>
-              {matchedData?.schemeCode || 'Scheme Code Not Available'}
+              {Data?.allotmentData?.schemeCode || 'Scheme Code Not Available'}
+            </Text>
+            <Text
+              style={{
+                backgroundColor:
+                  Data?.sip?.status === 'cancelled' ? '#FEE2E2' : '#D1FAE5',
+                paddingVertical: 6,
+                paddingHorizontal: 12,
+                borderRadius: 20,
+                fontSize: 14,
+                color:
+                  Data?.sip?.status === 'active'
+                    ? '#065F46'
+                    : Data?.sip?.status === 'cancelled'
+                    ? '#991B1B'
+                    : '#333',
+                overflow: 'hidden',
+                alignSelf: 'flex-end',
+              }}
+            >
+              {Data?.sip?.status === 'active'
+                ? 'Active'
+                : Data?.sip?.status === 'cancelled'
+                ? 'Cancelled'
+                : 'Unknown'}
             </Text>
           </View>
         </View>
@@ -844,19 +868,19 @@ const SipInterface = ({ navigation }) => {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>SIP Invested Value</Text>
             <Text style={styles.summaryValue}>
-              {formatCurrency(matchedHolding?.currentValue || 0)}
+              {formatCurrency(Data?.allotmentData?.currentValue || 0)}
             </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Current NAV</Text>
             <Text style={styles.summaryValue}>
-              ₹{matchedHolding?.currentNAV || 'N/A'}
+              ₹ {Data?.allotmentData?.currentNav || 'N/A'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Units</Text>
             <Text style={styles.summaryValue}>
-              {matchedHolding?.displayUnits || 'N/A'}
+              {Data?.allotmentData?.allottedUnit || 'N/A'}
             </Text>
           </View>
 
@@ -865,25 +889,33 @@ const SipInterface = ({ navigation }) => {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Folio Number</Text>
                 <Text style={styles.summaryValue}>
-                  {matchedHolding?.folioNo || 'N/A'}
+                  {Data?.allotmentData?.folioNo || 'N/A'}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Current Market Price</Text>
-                <Text style={styles.summaryValue}>
-                  ₹{matchedHolding?.currentValue || 'N/A'}
-                </Text>
-              </View>
+              {Data?.allotmentData?.schemeName.includes('ETF') && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Current Market Price</Text>
+                  <Text style={styles.summaryValue}>
+                    ₹{Data?.allotmentData?.currentValue || 'N/A'}
+                  </Text>
+                </View>
+              )}
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>NAV Date</Text>
                 <Text style={styles.summaryValue}>
-                  {matchedHolding?.currentNAV}
+                  {Data?.allotmentData?.currentNav}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Registration Number</Text>
+                <Text style={styles.summaryValue}>
+                  {Data?.allotmentData?.SIPRegnNo || 'N/A'}
                 </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Registration Date</Text>
                 <Text style={styles.summaryValue}>
-                  {matchedData?.SIPRegnNo || 'N/A'}
+                  {formatDate(Data?.allotmentData?.wbr2Details?.date) || 'N/A'}
                 </Text>
               </View>
             </>
@@ -935,7 +967,7 @@ const SipInterface = ({ navigation }) => {
                 style={styles.formInput}
                 placeholder="Enter current SIP amount (e.g., 2000)"
                 placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                value={matchedHolding?.allotedAmount}
+                value={stepUpForm.sipInstallmentAmount}
                 onChangeText={value =>
                   updateStepUpForm('sipInstallmentAmount', value)
                 }
@@ -1124,88 +1156,63 @@ const SipInterface = ({ navigation }) => {
         </View>,
       )}
 
-      {renderModal(
-        customizeModalVisible,
-        slideAnim,
-        closeCustomizeModal,
-        'Customize Your SIP',
-        <View style={styles.modalContent}>
-          <Text style={styles.customizeSubtitle}>
-            Choose an option to manage your SIP investment
-          </Text>
+     {renderModal(
+  customizeModalVisible,
+  slideAnim,
+  closeCustomizeModal,
+  'Customize Your SIP',
+  <View style={styles.modalContent}>
+    <Text style={styles.customizeSubtitle}>
+      Choose an option to manage your SIP investment
+    </Text>
 
-          {[
-            {
-              icon: '⏸️',
-              title: 'Pause SIP',
-              description: 'Temporarily pause your SIP for 1-10 months',
-              onPress: openPauseModal,
-              color: '#FFA500',
-            },
-            {
-              icon: '❌',
-              title: 'Cancel SIP',
-              description: 'Permanently cancel your SIP investment',
-              onPress: openCancelModal,
-              color: '#FF4444',
-            },
-            {
-              icon: '📈',
-              title: 'Step-up SIP',
-              description: 'Increase your SIP amount periodically',
-              onPress: openStepUpModal,
-              color: '#4CAF50',
-            },
-            {
-              icon: '💰',
-              title: 'SIP Redemption',
-              description: 'Redeem units from your SIP investment',
-              onPress: openRedemptionModal,
-              color: '#2196F3',
-            },
-            {
-              icon: '🔄',
-              title: 'Switch SIP',
-              description: 'Switch your SIP to another mutual fund scheme',
-              onPress: openSwitchModal,
-              color: '#9C27B0',
-            },
-          ].map((option, index) => (
-            <TouchableOpacity
-              key={index}
+    {customizeOptions === 'NO_UNITS' ? (
+      <View style={{ padding: 20, alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, color: '#666', textAlign: 'center' }}>
+          You don’t have units to redeem.
+        </Text>
+      </View>
+    ) : (
+      customizeOptions.map((option, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[
+            styles.customizeOption,
+            { borderLeftColor: option.color },
+          ]}
+          onPress={option.onPress}
+        >
+          <View style={styles.optionContent}>
+            <View
               style={[
-                styles.customizeOption,
-                { borderLeftColor: option.color },
+                styles.optionIcon,
+                { backgroundColor: `${option.color}20` },
               ]}
-              onPress={option.onPress}
             >
-              <View style={styles.optionContent}>
-                <View
-                  style={[
-                    styles.optionIcon,
-                    { backgroundColor: `${option.color}20` },
-                  ]}
-                >
-                  <Text
-                    style={[styles.optionIconText, { color: option.color }]}
-                  >
-                    {option.icon}
-                  </Text>
-                </View>
-                <View style={styles.optionTextContainer}>
-                  <Text style={styles.optionTitle}>{option.title}</Text>
-                  <Text style={styles.optionDescription}>
-                    {option.description}
-                  </Text>
-                </View>
-                <View style={styles.optionArrowContainer}>
-                  <Text style={styles.optionArrow}>›</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>,
-      )}
+              <Text
+                style={[styles.optionIconText, { color: option.color }]}
+              >
+                {option.icon}
+              </Text>
+            </View>
+
+            <View style={styles.optionTextContainer}>
+              <Text style={styles.optionTitle}>{option.title}</Text>
+              <Text style={styles.optionDescription}>
+                {option.description}
+              </Text>
+            </View>
+
+            <View style={styles.optionArrowContainer}>
+              <Text style={styles.optionArrow}>›</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))
+    )}
+  </View>
+)}
+
 
       {renderModal(
         pauseModalVisible,
@@ -1227,7 +1234,7 @@ const SipInterface = ({ navigation }) => {
               style={styles.slider}
               thumbStyle={styles.thumbStyle}
               trackStyle={styles.trackStyle}
-              minimumTrackTintColor="#dfb049ff"
+              minimumTrackTintColor="#1768BF"
               maximumTrackTintColor="#d3d3d3"
               thumbTintColor={Config.Colors.primary}
             />
@@ -1321,183 +1328,128 @@ const SipInterface = ({ navigation }) => {
         'SIP Redemption',
         <View style={styles.modalContent}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {!showOtpInput ? (
-              <>
-                {/* Installment Amount */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Installment Amount *</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter amount (e.g., 2000)"
-                    placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                    value={redemptionForm.installmentAmount}
-                    onChangeText={value =>
-                      updateRedemptionForm('installmentAmount', value)
-                    }
-                    keyboardType="numeric"
-                  />
-                </View>
+            <Text style={styles.redemptionLabel}>
+              Redeem units from your SIP investment
+            </Text>
 
-                {/* Number of Withdrawals */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Number of Withdrawals *</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter number of installments (e.g., 6)"
-                    placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                    value={redemptionForm.numberOfWithdrawls}
-                    onChangeText={value =>
-                      updateRedemptionForm('numberOfWithdrawls', value)
-                    }
-                    keyboardType="numeric"
-                  />
-                </View>
+            {/* Scheme Code (Read-only) */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Scheme Code</Text>
+              <TextInput
+                style={[styles.formInput, { backgroundColor: '#f0f0f0' }]}
+                value={Data?.allotmentData?.schemeCode || 'N/A'}
+                editable={false}
+              />
+            </View>
 
-                {/* Start Date */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>
-                    Start Date * (DD/MM/YYYY)
-                  </Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="DD/MM/YYYY"
-                    placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                    value={redemptionForm.startDate}
-                    onChangeText={value =>
-                      updateRedemptionForm('startDate', value)
-                    }
-                    maxLength={10}
-                  />
-                </View>
+            {/* Client Code (Read-only) */}
+            {/* <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Client Code</Text>
+              <TextInput
+                style={[styles.formInput, { backgroundColor: '#f0f0f0' }]}
+                value={'SM099'}
+                editable={false}
+              />
+            </View> */}
 
-                {/* Installment Units */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>
-                    Installment Units (Optional)
-                  </Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="Enter units (optional)"
-                    placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                    value={redemptionForm.installmentUnits}
-                    onChangeText={value =>
-                      updateRedemptionForm('installmentUnits', value)
-                    }
-                    keyboardType="numeric"
-                  />
-                </View>
+            {/* Folio Number (Read-only) */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Folio Number</Text>
+              <TextInput
+                style={[styles.formInput, { backgroundColor: '#f0f0f0' }]}
+                value={Data?.allotmentData?.folioNo || 'N/A'}
+                editable={false}
+              />
+            </View>
 
-                {/* First Order Today */}
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() =>
-                    updateRedemptionForm(
-                      'firstOrderToday',
-                      !redemptionForm.firstOrderToday,
-                    )
+            {/* All Units Flag (Read-only) */}
+            {/* <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>All Units Flag</Text>
+              <TextInput
+                style={[styles.formInput, { backgroundColor: '#f0f0f0' }]}
+                value={'N'}
+                editable={false}
+              />
+            </View> */}
+
+            {/* Redemption Amount (Read-only) */}
+            {/* <View style={styles.formGroup}>
+        <Text style={styles.formLabel}>Redemption Amount</Text>
+        <TextInput
+          style={[styles.formInput, { backgroundColor: '#f0f0f0' }]}
+          value={'-'}
+          editable={false}
+        />
+      </View> */}
+
+            {/* Redemption Units (Editable) */}
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>
+                Redemption Units * (alloted Units:{' '}
+                {Data?.allotmentData?.allottedUnit || 0})
+              </Text>
+              <TextInput
+                style={styles.formInput}
+                placeholder="Enter units to redeem (e.g., 2.5)"
+                placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
+                value={String(redemptionForm.redemptionUnits)}
+                keyboardType="numeric"
+                onChangeText={value => {
+                  const maxUnits = parseFloat(
+                    Data?.allotmentData?.allottedUnit || 0,
+                  );
+
+                  // Allow empty input
+                  if (value === '') {
+                    setRedemptionForm(prev => ({
+                      ...prev,
+                      redemptionUnits: '',
+                    }));
+                    return;
                   }
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      redemptionForm.firstOrderToday && styles.checkboxChecked,
-                    ]}
-                  >
-                    {redemptionForm.firstOrderToday && (
-                      <Text style={styles.checkboxTick}>✓</Text>
-                    )}
-                  </View>
-                  <Text style={styles.checkboxLabel}>
-                    Start redemption from today (Instant redemption)
-                  </Text>
-                </TouchableOpacity>
 
-                {/* Summary */}
-                <View style={styles.redemptionSummary}>
-                  <Text style={styles.summaryTitle}>Redemption Summary</Text>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Frequency:</Text>
-                    <Text style={styles.summaryValue}>
-                      {redemptionForm.frequencyType}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>
-                      Amount per installment:
-                    </Text>
-                    <Text style={styles.summaryValue}>
-                      ₹{redemptionForm.installmentAmount || '0'}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Total withdrawals:</Text>
-                    <Text style={styles.summaryValue}>
-                      {redemptionForm.numberOfWithdrawls || '0'}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Total amount:</Text>
-                    <Text style={styles.summaryValue}>
-                      ₹
-                      {(
-                        parseFloat(redemptionForm.installmentAmount || 0) *
-                        parseFloat(redemptionForm.numberOfWithdrawls || 0)
-                      ).toFixed(0)}
-                    </Text>
-                  </View>
-                </View>
-
-                <Rbutton
-                  title="Submit Redemption"
-                  loader={loader}
-                  onPress={handleSIPRedemption}
-                  style={styles.submitButton}
-                  textStyle={styles.submitButtonText}
-                  disabled={
-                    loader ||
-                    !redemptionForm.installmentAmount ||
-                    !redemptionForm.numberOfWithdrawls ||
-                    !redemptionForm.startDate
+                  // Allow only digits and dot
+                  const regex = /^[0-9]*\.?[0-9]*$/;
+                  if (!regex.test(value)) {
+                    return; // ignore invalid characters
                   }
-                />
-              </>
-            ) : (
-              <>
-                <Text style={styles.otpTitle}>Enter OTP</Text>
-                <Text style={styles.otpSubtitle}>
-                  Please enter the 4-digit OTP sent to complete your redemption
-                </Text>
 
-                <View style={styles.otpContainer}>
-                  <TextInput
-                    style={styles.otpInput}
-                    placeholder="Enter 4-digit OTP"
-                    placeholderTextColor={isDarkTheme ? '#888888' : '#999999'}
-                    value={otp}
-                    onChangeText={setOtp}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    textAlign="center"
-                    fontSize={widthToDp(6)}
-                    letterSpacing={widthToDp(2)}
-                  />
-                </View>
+                  // If value ends with ".", allow it (user is typing decimal)
+                  if (value.endsWith('.')) {
+                    setRedemptionForm(prev => ({
+                      ...prev,
+                      redemptionUnits: value,
+                    }));
+                    return;
+                  }
 
-                <Rbutton
-                  title="Verify & Complete"
-                  loader={loader}
-                  onPress={handleOtpSubmission}
-                  style={styles.submitButton}
-                  textStyle={styles.submitButtonText}
-                  disabled={loader || otp.length !== 4}
-                />
+                  let num = parseFloat(value);
 
-                <Text style={styles.otpNote}>
-                  Note: You cannot cancel this process until OTP verification is
-                  complete
-                </Text>
-              </>
-            )}
+                  if (isNaN(num)) num = '';
+
+                  // Prevent negative
+                  if (num < 0) num = 0;
+
+                  // Prevent more than allotted units
+                  if (num > maxUnits) num = maxUnits;
+
+                  setRedemptionForm(prev => ({
+                    ...prev,
+                    redemptionUnits: num.toString(),
+                  }));
+                }}
+              />
+            </View>
+
+            {/* Submit Button */}
+            <Rbutton
+              title="Submit Redemption"
+              loader={loader}
+              onPress={handleRedemptionSubmit}
+              style={styles.submitButton}
+              textStyle={styles.submitButtonText}
+              disabled={loader || !redemptionForm.redemptionUnits}
+            />
           </ScrollView>
         </View>,
       )}

@@ -21,10 +21,10 @@ const Collection = () => {
     },
     {
       id: 1,
-      title: 'High Return',
+      title: 'Liquid Fund',
       icon: Icons.sip100,
       color: '#4ECDC4',
-       type:"HIGH"
+       type:"LIQUID"
     },
     {
       id: 3,

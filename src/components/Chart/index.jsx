@@ -172,7 +172,7 @@ const Chart = ({ apiData, value, onStartInteracting, onEndInteracting }) => {
           const series = chart.addAreaSeries({
             topColor: '#f6fbff',
             bottomColor: '#f6fbff',
-            lineColor: '#dfb049ff',
+            lineColor: '#1768BF',
             lineWidth: 2,
           });
 

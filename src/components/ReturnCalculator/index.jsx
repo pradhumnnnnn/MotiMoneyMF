@@ -140,7 +140,7 @@ const ReturnCalculator = ({ cagrData }) => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#dfb049ff"
+            minimumTrackTintColor="#1768BF"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary || '#00B386'}
           />

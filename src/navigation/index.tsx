@@ -67,6 +67,7 @@ import BiometricLogin from '../presentation/screens/BiometricLogin';
 import ChangePassword from '../components/changePassword';
 import SipInterface2 from '../components/SipInterface/SipInterface2';
 import NFO from '../presentation/screens/NFO';
+import LoginWithPass from '../presentation/screens/loginWithPass';
 const Stack = createNativeStackNavigator<StackParamList>();
 const Tab = createBottomTabNavigator();
 
@@ -263,7 +264,7 @@ function BottomTabNavigator() {
           ),
           tabBarStyle: {
             height: widthToDp(18),
-            backgroundColor: '#f0b538',
+            backgroundColor: '#2B8DF6',
             position: 'absolute',
             shadowOffset: {
               width: 6,
@@ -403,6 +404,14 @@ function BottomTabNavigator() {
             unmountOnBlur: true,
           }}
         />
+        {/* <Tab.Screen
+          name={ScreenName.LoginWithPass}
+          component={LoginWithPass}
+          options={{
+            tabBarLabel: 'LoginWithPass',
+            unmountOnBlur: true,
+          }}
+        /> */}
       </Tab.Navigator>
 
       <ExitNotification
@@ -470,6 +479,11 @@ export default function RootNavigator() {
       <Stack.Screen
         name={ScreenName.NFO}
         component={NFO}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ScreenName.LoginWithPass}
+        component={LoginWithPass}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

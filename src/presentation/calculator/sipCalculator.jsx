@@ -105,7 +105,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#dfb049ff"
+//             minimumTrackTintColor="#1768BF"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -143,7 +143,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#dfb049ff"
+//             minimumTrackTintColor="#1768BF"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -185,7 +185,7 @@
 //             containerStyle={styles.slider}
 //             thumbStyle={styles.thumbStyle}
 //             trackStyle={styles.trackStyle}
-//             minimumTrackTintColor="#dfb049ff"
+//             minimumTrackTintColor="#1768BF"
 //             maximumTrackTintColor="#d3d3d3"
 //           />
 //         </View>
@@ -358,12 +358,15 @@ const SIPCalculator = () => {
     <View style={styles.container}>
       <ScrollView>
         {/* <TouchableOpacity
+
+
+
           onPress={() => navigation.replace("Home")}
           style={styles.backContainer}
         >
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity> */}
-        <View style={{  alignItems: "center", gap: 10 }}>
+        <View style={{  alignItems: "start", gap: 10 }}>
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <SInfoSvg.Remote />
@@ -409,7 +412,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#f0b538"
+            minimumTrackTintColor="#1768BF"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />
@@ -448,7 +451,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#dfb049ff"
+            minimumTrackTintColor="#1768BF"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />
@@ -491,7 +494,7 @@ const SIPCalculator = () => {
             style={styles.slider}
             thumbStyle={styles.thumbStyle}
             trackStyle={styles.trackStyle}
-            minimumTrackTintColor="#dfb049ff"
+            minimumTrackTintColor="#1768BF"
             maximumTrackTintColor="#d3d3d3"
             thumbTintColor={Config.Colors.primary}
           />

@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   nextButtonText: {
     textAlign: "center",
     fontSize: widthToDp(5),
-    color: "white",
+    color: "black",
     fontWeight: '600',
   },
   disabledButtonText: {

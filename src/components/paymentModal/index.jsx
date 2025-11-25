@@ -60,10 +60,10 @@ const PaymentModal = ({ route, onClose, onSuccess, onError }) => {
   const [fallbackDetails] = useState({
     user: {
       accountDetails: [{
-        bankName: "State Bank of India",
-        accountNumber: "1234567890123456",
-        ifscCode: "SBIN0001234",
-        bankBranch: "Mumbai Main Branch"
+        bankName: "",
+        accountNumber: "",
+        ifscCode: "",
+        bankBranch: ""
       }]
     }
   });
@@ -159,7 +159,7 @@ const PaymentModal = ({ route, onClose, onSuccess, onError }) => {
     console.log("Payment payload:", payload);
     console.log("Token", Token);
     try {
-      const response = await fetch(`${baseUrl}/api/v1/order/payment`, {
+      const response = await fetch(`${baseUrl}/api/v1/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,33 +173,33 @@ const PaymentModal = ({ route, onClose, onSuccess, onError }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log("Payment response:", data);
+   
+  const data = await response.json();
+  console.log("Payment response:", data);
 
-      setPaymentResponse(data);
+  setPaymentResponse(data);
 
-      const isDirectPayment = paymentMethod === "DIRECT" && data?.responsestring?.includes("<html");
+  // ✅ Handle new API structure
+  if (data?.success) {
+    setSuccess(true);
+    setCurrentStep('result');
+    setShowPaymentModal(true);
+    if (onSuccess) onSuccess(data);
+  } else {
+    setError(data?.message || "Payment failed. Please try again.");
+    setCurrentStep('result');
+    setShowPaymentModal(true);
+    if (onError) onError(data);
+  }
 
-      if (isDirectPayment) {
-        openInSameTab(data.responsestring);
-        return;
-      } else {
-        setShowPaymentModal(true);
-      }
-
-      setSuccess(true);
-      setCurrentStep('result');
-      if (onSuccess) onSuccess(data);
-
-    } catch (err) {
-      console.error("Payment error:", err);
-      setError(err.message || "Payment processing failed. Please try again.");
-      setCurrentStep('result');
-      if (onError) onError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+} catch (err) {
+  console.error("Payment error:", err);
+  setError(err.message || "Payment processing failed. Please try again.");
+  setCurrentStep('result');
+  if (onError) onError(err);
+} finally {
+  setLoading(false);
+}}
 
   // Reset form function
   const resetForm = () => {
@@ -372,104 +372,82 @@ const PaymentModal = ({ route, onClose, onSuccess, onError }) => {
     </Modal>
   );
 
-  // Payment Response Modal Component
-  const PaymentResponseModal = ({ response, onClose }) => {
-    const isSuccess = response?.statuscode === 101;
-    const isUpiPaymentRequest = response?.responsestring?.includes("BSE StAR MF has requested payment from your UPI account");
 
-    return (
-      <Modal
-        visible={true}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={onClose}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.responseModalContainer}>
-            <View style={styles.responseModalContent}>
-              {/* Status Icon */}
-              <View style={[
-                styles.statusIconContainer,
-                { backgroundColor: isSuccess || isUpiPaymentRequest ? '#dcfce7' : '#fef2f2' }
+const PaymentResponseModal = ({ response, onClose }) => {
+  const isSuccess = response?.success === true;
+  const messageText = response?.message || "Something went wrong.";
+
+  return (
+    <Modal
+      visible={true}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.responseModalContainer}>
+          <View style={styles.responseModalContent}>
+            {/* Status Icon */}
+            <View style={[
+              styles.statusIconContainer,
+              { backgroundColor: isSuccess ? '#dcfce7' : '#fef2f2' }
+            ]}>
+              <Text style={[
+                styles.statusIcon,
+                { color: isSuccess ? '#16a34a' : '#dc2626' }
               ]}>
-                <Text style={[
-                  styles.statusIcon,
-                  { color: isSuccess || isUpiPaymentRequest ? '#16a34a' : '#dc2626' }
-                ]}>
-                  {isSuccess || isUpiPaymentRequest ? '✓' : '!'}
-                </Text>
-              </View>
+                {isSuccess ? '✓' : '✕'}
+              </Text>
+            </View>
 
-              {/* Status Content */}
-              {investmentType === "SIP" ? (
-                <View style={styles.statusTextContainer}>
-                  <Text style={styles.statusTitle}>
-                    Your 1st Payment could not be processed today but SIP will be started on selected Date
-                  </Text>
-                  <Text style={styles.statusMessage}>
-                    {(isSuccess || isUpiPaymentRequest)
-                      ? "Please make your payment through your UPI app and after that close this page"
-                      : "Your payment could not be processed."
-                    }
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.statusTextContainer}>
-                  <Text style={styles.statusTitle}>
-                    {isSuccess || isUpiPaymentRequest ? "Payment Initiated!" : "Payment Failed"}
-                  </Text>
-                  <Text style={styles.statusMessage}>
-                    {(isSuccess || isUpiPaymentRequest)
-                      ? "Please make your payment through your UPI app and after that close this page"
-                      : (response?.responsestring || "Your payment could not be processed.")
-                    }
-                  </Text>
+            {/* Status Text */}
+            <View style={styles.statusTextContainer}>
+              <Text style={styles.statusTitle}>
+                {isSuccess ? "Payment Initiated!" : "Payment Failed"}
+              </Text>
+              <Text style={styles.statusMessage}>
+                {messageText}
+              </Text>
+            </View>
+
+            {/* Order Summary Card */}
+            <View style={styles.orderSummaryCard}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Order ID:</Text>
+                <Text style={styles.summaryValue}>{orderId}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Amount:</Text>
+                <Text style={[styles.summaryValue, styles.amountHighlight]}>₹{amount}</Text>
+              </View>
+              {response?.internalRefNo && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Reference:</Text>
+                  <Text style={styles.summaryValue}>{response.internalRefNo}</Text>
                 </View>
               )}
-
-              {/* Order Summary Card */}
-              <View style={styles.orderSummaryCard}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Order ID:</Text>
-                  <Text style={styles.summaryValue}>{orderId}</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Amount:</Text>
-                  <Text style={[styles.summaryValue, styles.amountHighlight]}>₹{amount}</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Payment Method:</Text>
-                  <Text style={styles.summaryValue}>{paymentMethod}</Text>
-                </View>
-                {response?.internalrefno && (
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Reference:</Text>
-                    <Text style={styles.summaryValue}>{response?.internalrefno || "N/A"}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Continue Button */}
-              <TouchableOpacity
-                onPress={() => {
-                  onClose();
-                  navigateToMarketWatch();
-                }}
-                style={[
-                  styles.continueButton,
-                  {
-                    backgroundColor: isSuccess || isUpiPaymentRequest ? '#16a34a' : '#dc2626'
-                  }
-                ]}
-              >
-                <Text style={styles.continueButtonText}>Continue</Text>
-              </TouchableOpacity>
             </View>
+
+            {/* Continue Button */}
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                navigateToMarketWatch();
+              }}
+              style={[
+                styles.continueButton,
+                { backgroundColor: isSuccess ? '#16a34a' : '#dc2626' }
+              ]}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-    );
-  };
+      </View>
+    </Modal>
+  );
+};
+
 
   // Processing Animation Component
   const ProcessingAnimation = () => (
@@ -1711,735 +1689,3 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-
-// export default styles;
-
-// const styles = StyleSheet.create({
-//   // Main Container
-//   mainContainer: {
-//     flex: 1,
-//     backgroundColor: '#f8fafc',
-//   },
-
-//   // Enhanced Header
-//   header: {
-//     backgroundColor: '#1f2937',
-//     paddingTop: StatusBar.currentHeight || heightToDp(3),
-//     paddingBottom: heightToDp(1),
-//     paddingHorizontal: widthToDp(4),
-//     elevation: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.2,
-//     shadowRadius: 8,
-//   },
-//   headerContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//   },
-//   headerLeft: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     flex: 1,
-//   },
-//   headerIconContainer: {
-//     width: widthToDp(12),
-//     height: widthToDp(12),
-//     borderRadius: widthToDp(6),
-//     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginRight: widthToDp(3),
-//   },
-//   headerIcon: {
-//     fontSize: widthToDp(6),
-//   },
-//   headerTitle: {
-//     fontSize: widthToDp(5),
-//     fontWeight: 'bold',
-//     color: '#ffffff',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   headerSubtitle: {
-//     fontSize: widthToDp(3.2),
-//     color: '#d1d5db',
-//   },
-//   headerCloseButton: {
-//     width: widthToDp(10),
-//     height: widthToDp(10),
-//     borderRadius: widthToDp(5),
-//     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   headerCloseText: {
-//     color: '#ffffff',
-//     fontSize: widthToDp(4.5),
-//     fontWeight: 'bold',
-//   },
-
-//   // Scroll Container
-//   scrollContainer: {
-//     flex: 1,
-//   },
-//   content: {
-//     padding: widthToDp(2),
-//     paddingBottom: heightToDp(10),
-//   },
-
-//   // Enhanced Order Summary
-//   orderSummarySection: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(4),
-//     padding: widthToDp(2),
-//     marginBottom: heightToDp(1),
-//     elevation: 4,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 8,
-//   },
-//   orderSummaryHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: heightToDp(3),
-//   },
-//   securityBadgeSmall: {
-//     backgroundColor: '#f0fdf4',
-//     paddingHorizontal: widthToDp(3),
-//     paddingVertical: heightToDp(0.5),
-//     borderRadius: widthToDp(4),
-//     borderWidth: 1,
-//     borderColor: '#bbf7d0',
-//   },
-//   securityBadgeText: {
-//     fontSize: widthToDp(3),
-//     color: '#166534',
-//     fontWeight: '600',
-//   },
-//   orderSummaryContent: {
-//     gap: heightToDp(3),
-//   },
-//   amountDisplay: {
-//     alignItems: 'center',
-//     backgroundColor: '#f8fafc',
-//     padding: widthToDp(4),
-//     borderRadius: widthToDp(3),
-//     borderWidth: 1,
-//     borderColor: '#e2e8f0',
-//   },
-//   amountLabel: {
-//     fontSize: widthToDp(3.5),
-//     color: '#64748b',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   amountValue: {
-//     fontSize: widthToDp(8),
-//     fontWeight: 'bold',
-//     color: '#7c3aed',
-//   },
-//   orderDetailsGrid: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//   },
-//   orderDetailItem: {
-//     flex: 1,
-//     alignItems: 'center',
-//   },
-//   orderDetailLabel: {
-//     fontSize: widthToDp(3.2),
-//     color: '#64748b',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   orderDetailValue: {
-//     fontSize: widthToDp(3.8),
-//     fontWeight: '600',
-//     color: '#1e293b',
-//   },
-
-//   // Section Styles
-//   section: {
-//     marginBottom: heightToDp(4),
-//   },
-//   sectionTitle: {
-//     fontSize: widthToDp(4.8),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   sectionSubtitle: {
-//     fontSize: widthToDp(3.5),
-//     color: '#64748b',
-//     marginBottom: heightToDp(3),
-//   },
-
-//   // Enhanced Payment Methods
-//   paymentMethodsContainer: {
-//     gap: heightToDp(2),
-//   },
-//   paymentMethodCard: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(4),
-//     padding: widthToDp(4),
-//     borderWidth: 2,
-//     borderColor: '#e2e8f0',
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 4,
-//   },
-//   paymentMethodCardSelected: {
-//     borderColor: '#7c3aed',
-//     backgroundColor: '#faf5ff',
-//     elevation: 4,
-//   },
-//   paymentMethodContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   paymentMethodIcon: {
-//     width: widthToDp(14),
-//     height: widthToDp(14),
-//     borderRadius: widthToDp(7),
-//     backgroundColor: '#f1f5f9',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginRight: widthToDp(4),
-//   },
-//   paymentMethodIconSelected: {
-//     backgroundColor: '#ede9fe',
-//   },
-//   paymentMethodIconText: {
-//     fontSize: widthToDp(6),
-//   },
-//   paymentMethodTextContainer: {
-//     flex: 1,
-//   },
-//   paymentMethodLabel: {
-//     fontSize: widthToDp(4.2),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   paymentMethodLabelSelected: {
-//     color: '#7c3aed',
-//   },
-//   paymentMethodDesc: {
-//     fontSize: widthToDp(3.5),
-//     color: '#64748b',
-//   },
-//   selectedIndicator: {
-//     position: 'absolute',
-//     top: widthToDp(3),
-//     right: widthToDp(3),
-//     width: widthToDp(6),
-//     height: widthToDp(6),
-//     borderRadius: widthToDp(3),
-//     backgroundColor: '#7c3aed',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   selectedIndicatorText: {
-//     color: '#ffffff',
-//     fontSize: widthToDp(3),
-//     fontWeight: 'bold',
-//   },
-
-//   // Enhanced Input Styles
-//   inputLabel: {
-//     fontSize: widthToDp(4),
-//     fontWeight: '600',
-//     color: '#374151',
-//     marginBottom: heightToDp(1.5),
-//   },
-//   inputContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     backgroundColor: '#ffffff',
-//     borderWidth: 2,
-//     borderColor: '#e2e8f0',
-//     borderRadius: widthToDp(3),
-//     paddingHorizontal: widthToDp(4),
-//     elevation: 1,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 2,
-//   },
-//   inputIcon: {
-//     fontSize: widthToDp(5),
-//     marginRight: widthToDp(3),
-//   },
-//    textInput: {
-//     flex: 1,
-//     paddingVertical: heightToDp(2.5),
-//     fontSize: widthToDp(4),
-//     color: '#1e293b',
-//   },
-//   inputHint: {
-//     fontSize: widthToDp(3.2),
-//     color: '#64748b',
-//     marginTop: heightToDp(1),
-//     marginLeft: widthToDp(2),
-//   },
-
-//   // Bank Selector
-//   bankSelector: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     backgroundColor: '#ffffff',
-//     borderWidth: 2,
-//     borderColor: '#e2e8f0',
-//     borderRadius: widthToDp(3),
-//     paddingHorizontal: widthToDp(4),
-//     paddingVertical: heightToDp(2.5),
-//     elevation: 1,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 2,
-//   },
-//   bankSelectorContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     flex: 1,
-//   },
-//   bankSelectorIcon: {
-//     fontSize: widthToDp(5),
-//     marginRight: widthToDp(3),
-//   },
-//   bankSelectorText: {
-//     fontSize: widthToDp(4),
-//     color: '#9ca3af',
-//   },
-//   bankSelectorTextSelected: {
-//     color: '#1e293b',
-//     fontWeight: '600',
-//   },
-//   bankSelectorArrow: {
-//     fontSize: widthToDp(5),
-//     color: '#64748b',
-//     fontWeight: 'bold',
-//   },
-
-//   // Error Alert
-//   errorAlert: {
-//     flexDirection: 'row',
-//     backgroundColor: '#fef2f2',
-//     borderLeftWidth: 4,
-//     borderLeftColor: '#ef4444',
-//     padding: widthToDp(4),
-//     borderRadius: widthToDp(3),
-//     marginBottom: heightToDp(3),
-//     elevation: 2,
-//     shadowColor: '#ef4444',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//   },
-//   errorIconSmall: {
-//     width: widthToDp(6),
-//     height: widthToDp(6),
-//     borderRadius: widthToDp(3),
-//     backgroundColor: '#ef4444',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginRight: widthToDp(3),
-//   },
-//   errorIconSmallText: {
-//     color: '#ffffff',
-//     fontSize: widthToDp(3.5),
-//     fontWeight: 'bold',
-//   },
-//   alertTextContainer: {
-//     flex: 1,
-//   },
-//   alertTitle: {
-//     fontSize: widthToDp(4),
-//     fontWeight: 'bold',
-//     color: '#dc2626',
-//     marginBottom: heightToDp(0.5),
-//   },
-//   alertMessage: {
-//     fontSize: widthToDp(3.5),
-//     color: '#991b1b',
-//     lineHeight: widthToDp(5),
-//   },
-
-//   // Action Buttons
-//   actionButtonsContainer: {
-//     flexDirection: 'row',
-//     gap: widthToDp(3),
-//     // marginTop: heightToDp(4),
-//     marginBottom: heightToDp(4),
-//   },
-//   cancelButton: {
-//     flex: 1,
-//     backgroundColor: '#ffffff',
-//     borderWidth: 2,
-//     borderColor: '#e2e8f0',
-//     borderRadius: widthToDp(3),
-//     paddingVertical: heightToDp(2.5),
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 4,
-//   },
-//   cancelButtonText: {
-//     fontSize: widthToDp(4.2),
-//     fontWeight: '600',
-//     color: '#64748b',
-//   },
-//   submitButton: {
-//     flex: 2,
-//     backgroundColor: '#7c3aed',
-//     borderRadius: widthToDp(3),
-//     paddingVertical: heightToDp(2.5),
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     elevation: 4,
-//     shadowColor: '#7c3aed',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 8,
-//   },
-//   submitButtonDisabled: {
-//     backgroundColor: '#94a3b8',
-//     elevation: 1,
-//     shadowOpacity: 0.1,
-//   },
-//   submitButtonContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: widthToDp(2),
-//   },
-//   loadingButtonContent: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: widthToDp(3),
-//   },
-//   submitButtonIcon: {
-//     fontSize: widthToDp(4.5),
-//   },
-//   submitButtonText: {
-//     fontSize: widthToDp(4.2),
-//     fontWeight: 'bold',
-//     color: '#ffffff',
-//   },
-
-//   // Security Section
-//   securitySection: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(4),
-//     padding: widthToDp(4),
-//     elevation: 2,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 4,
-//   },
-//   securityFeatures: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     alignItems: 'center',
-//   },
-//   securityFeature: {
-//     alignItems: 'center',
-//     flex: 1,
-//   },
-//   securityFeatureIcon: {
-//     fontSize: widthToDp(5),
-//     marginBottom: heightToDp(1),
-//   },
-//   securityFeatureText: {
-//     fontSize: widthToDp(3),
-//     color: '#64748b',
-//     textAlign: 'center',
-//     fontWeight: '500',
-//   },
-
-//   // Modal Overlay
-//   modalOverlay: {
-//     flex: 1,
-//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: widthToDp(4),
-//   },
-
-//   // Bank Picker Modal
-//   bankPickerContainer: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(4),
-//     width: '100%',
-//     maxHeight: height * 0.7,
-//     elevation: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 12,
-//   },
-//   bankPickerHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: widthToDp(5),
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#e2e8f0',
-//   },
-//   bankPickerTitle: {
-//     fontSize: widthToDp(5),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//   },
-//   bankList: {
-//     flex: 1,
-//   },
-//   bankItem: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: widthToDp(4),
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#f1f5f9',
-//   },
-//   bankItemText: {
-//     fontSize: widthToDp(4),
-//     color: '#1e293b',
-//     flex: 1,
-//   },
-//   bankItemIcon: {
-//     fontSize: widthToDp(5),
-//   },
-
-//   // Cancel Confirmation Modal
-//   cancelModalContainer: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(5),
-//     width: '90%',
-//     elevation: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 12,
-//   },
-//   cancelModalContent: {
-//     padding: widthToDp(6),
-//     alignItems: 'center',
-//   },
-//   warningIconContainer: {
-//     width: widthToDp(16),
-//     height: widthToDp(16),
-//     borderRadius: widthToDp(8),
-//     backgroundColor: '#fef3cd',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginBottom: heightToDp(3),
-//   },
-//   warningIcon: {
-//     fontSize: widthToDp(8),
-//   },
-//   cancelModalTitle: {
-//     fontSize: widthToDp(5.5),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//     marginBottom: heightToDp(2),
-//     textAlign: 'center',
-//   },
-//   cancelModalMessage: {
-//     fontSize: widthToDp(4),
-//     color: '#64748b',
-//     textAlign: 'center',
-//     lineHeight: widthToDp(6),
-//     marginBottom: heightToDp(4),
-//   },
-//   cancelModalButtons: {
-//     flexDirection: 'row',
-//     gap: widthToDp(3),
-//     width: '100%',
-//   },
-//   cancelModalButtonSecondary: {
-//     flex: 1,
-//     backgroundColor: '#ffffff',
-//     borderWidth: 2,
-//     borderColor: '#7c3aed',
-//     borderRadius: widthToDp(3),
-//     paddingVertical: heightToDp(2.5),
-//     alignItems: 'center',
-//   },
-//   cancelModalButtonSecondaryText: {
-//     fontSize: widthToDp(4),
-//     fontWeight: '600',
-//     color: '#7c3aed',
-//   },
-//   cancelModalButtonPrimary: {
-//     flex: 1,
-//     backgroundColor: '#ef4444',
-//     borderRadius: widthToDp(3),
-//     paddingVertical: heightToDp(2.5),
-//     alignItems: 'center',
-//   },
-//   cancelModalButtonPrimaryText: {
-//     fontSize: widthToDp(4),
-//     fontWeight: '600',
-//     color: '#ffffff',
-//   },
-
-//   // Payment Completion Modal
-//   completionModalContainer: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(5),
-//     width: '90%',
-//     elevation: 8,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 12,
-//   },
-//   completionModalContent: {
-//     padding: widthToDp(6),
-//     alignItems: 'center',
-//   },
-//   completionIconContainer: {
-//     width: widthToDp(20),
-//     height: widthToDp(20),
-//     borderRadius: widthToDp(10),
-//     backgroundColor: '#f0fdf4',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     marginBottom: heightToDp(3),
-//   },
-//   completionIcon: {
-//     fontSize: widthToDp(10),
-//   },
-//   completionModalTitle: {
-//     fontSize: widthToDp(6),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//     marginBottom: heightToDp(2),
-//     textAlign: 'center',
-//   },
-//   completionModalMessage: {
-//     fontSize: widthToDp(4),
-//     color: '#64748b',
-//     textAlign: 'center',
-//     lineHeight: widthToDp(6),
-//     marginBottom: heightToDp(4),
-//   },
-//   orderSummaryCardSmall: {
-//     backgroundColor: '#f8fafc',
-//     borderRadius: widthToDp(3),
-//     padding: widthToDp(4),
-//     width: '100%',
-//     marginBottom: heightToDp(4),
-//     borderWidth: 1,
-//     borderColor: '#e2e8f0',
-//   },
-//   summaryRowSmall: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: heightToDp(1),
-//   },
-//   summaryLabelSmall: {
-//     fontSize: widthToDp(3.5),
-//     color: '#64748b',
-//     fontWeight: '500',
-//   },
-//   summaryValueSmall: {
-//     fontSize: widthToDp(3.5),
-//     color: '#1e293b',
-//     fontWeight: '600',
-//   },
-//   amountHighlightSmall: {
-//     color: '#7c3aed',
-//     fontWeight: 'bold',
-//   },
-//   completionButton: {
-//     backgroundColor: '#7c3aed',
-//     borderRadius: widthToDp(3),
-//     paddingVertical: heightToDp(2.5),
-//     paddingHorizontal: widthToDp(8),
-//     alignItems: 'center',
-//     elevation: 4,
-//     shadowColor: '#7c3aed',
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.3,
-//     shadowRadius: 8,
-//   },
-//   completionButtonText: {
-//     fontSize: widthToDp(4.2),
-//     fontWeight: 'bold',
-//     color: '#ffffff',
-//   },
-
-//   // Processing Animation Modal
-//   processingOverlay: {
-//     flex: 1,
-//     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   processingContent: {
-//     backgroundColor: '#ffffff',
-//     borderRadius: widthToDp(5),
-//     padding: widthToDp(8),
-//     alignItems: 'center',
-//     width: '80%',
-//     elevation: 12,
-//     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 6 },
-//     shadowOpacity: 0.4,
-//     shadowRadius: 16,
-//   },
-//   processingIconContainer: {
-//     position: 'relative',
-//     marginBottom: heightToDp(3),
-//   },
-//   processingSpinner: {
-//     transform: [{ scale: 1.5 }],
-//   },
-//   lockIcon: {
-//     position: 'absolute',
-//     fontSize: widthToDp(4),
-//     top: '50%',
-//     left: '50%',
-//     transform: [{ translateX: -widthToDp(2) }, { translateY: -widthToDp(2) }],
-//   },
-//   processingTitle: {
-//     fontSize: widthToDp(5),
-//     fontWeight: 'bold',
-//     color: '#1e293b',
-//     marginBottom: heightToDp(1.5),
-//     textAlign: 'center',
-//   },
-//   processingMessage: {
-//     fontSize: widthToDp(4),
-//     color: '#64748b',
-//     textAlign: 'center',
-//     marginBottom: heightToDp(3),
-//     lineHeight: widthToDp(5.5),
-//   },
-//   processingDots: {
-//     flexDirection: 'row',
-//     gap: widthToDp(2),
-//   },
-//   dot: {
-//     width: widthToDp(2),
-//     height: widthToDp(2),
-//     borderRadius: widthToDp(1),
-//     backgroundColor: '#7c3aed',
-//   },
-
-//   // Disabled State
-//   disabled: {
-//     opacity: 0.6,
-//   },
-// });

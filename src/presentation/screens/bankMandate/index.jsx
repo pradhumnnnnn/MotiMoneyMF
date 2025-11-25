@@ -108,7 +108,7 @@ const BankMandate = ({ navigation }) => {
       const Token = await getData(Config.store_key_login_details);
       console.log('Token', Token);
       const response = await fetch(
-        'https://onekyc.finovo.tech:8015/api/client/registration/create/e-nach/mandate-url',
+        'https://onekyc.finovo.tech:8039/api/client/registration/create/e-nach/mandate-url',
         {
           method: 'POST',
           headers: {
@@ -203,7 +203,7 @@ const BankMandate = ({ navigation }) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const response = await axios.post(
-        'https://onekyc.finovo.tech:8015/api/client/registration/mandate/amount',
+        'https://onekyc.finovo.tech:8039/api/client/registration/mandate/amount',
         {
           accountNumber: selectedBank?.accountNumber || '',
           ifscCode: selectedBank?.ifscCode || '',
@@ -387,7 +387,7 @@ const BankMandate = ({ navigation }) => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -415,7 +415,7 @@ const BankMandate = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
 
       <Header />
 
@@ -649,12 +649,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {

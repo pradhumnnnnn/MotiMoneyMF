@@ -77,7 +77,7 @@ const SIPCalculator = () => {
 
   const Header = () => (
     <LinearGradient
-      colors={['#f0b538', '#f0b538']}
+      colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -125,9 +125,9 @@ const SIPCalculator = () => {
         step={step}
         onValueChange={onChange}
         style={styles.slider}
-        minimumTrackTintColor="#f0b538"
+        minimumTrackTintColor="#2B8DF6"
         maximumTrackTintColor="#E6F3FF"
-        thumbTintColor="#f0b538"
+        thumbTintColor="#2B8DF6"
       />
       
       <View style={styles.rangeLabels}>
@@ -140,7 +140,7 @@ const SIPCalculator = () => {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#f0b538" />
+      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -225,12 +225,12 @@ const styles = StyleSheet.create({
   },
   androidStatusBar: {
     height: StatusBar.currentHeight,
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
   },
 
   // Header Styles
   headerGradient: {
-    backgroundColor: '#f0b538',
+    backgroundColor: '#2B8DF6',
     paddingBottom: heightToDp(2),
   },
   headerContent: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: widthToDp(8),
     fontWeight: 'bold',
-    color: '#f0b538',
+    color: '#2B8DF6',
     marginBottom: heightToDp(2),
   },
   breakdownContainer: {
@@ -358,13 +358,13 @@ const styles = StyleSheet.create({
   },
   unit: {
     fontSize: widthToDp(3.5),
-    color: '#f0b538',
+    color: '#2B8DF6',
     fontWeight: '600',
     marginRight: widthToDp(1),
   },
   valueInput: {
     fontSize: widthToDp(4),
-    color: '#f0b538',
+    color: '#2B8DF6',
     fontWeight: '600',
     flex: 1,
     textAlign: 'right',

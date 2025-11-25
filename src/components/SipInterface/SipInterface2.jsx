@@ -114,7 +114,7 @@ const SipInterface = ({ navigation }) => {
 
   const handlePauseSIP = async () => {
     try {
-      const response = await apiPostService('/api/v1/order/pause/sip/entry', {
+      const response = await apiPostService('/api/v1/pause/sip/entry', {
         sipRegistrationNumber: Data?.SIPRegnNo,
         pauseInstNumber: pauseDuration,
       });
@@ -173,7 +173,7 @@ const SipInterface = ({ navigation }) => {
         ceaseBseCode: String(cancelReason + 1).padStart(2, '0')
       });
       const response = await apiPostService(
-        '/api/v1/order/cancellation/sip/entry',
+        '/api/v1/cancellation/sip/entry',
         {
           xsipRegistrationID: Data?.SIPRegnNo,
           remarks: cancelReasonText,
@@ -602,7 +602,7 @@ const SipInterface = ({ navigation }) => {
                   style={styles.slider}
                   thumbStyle={styles.thumbStyle}
                   trackStyle={styles.trackStyle}
-                  minimumTrackTintColor="#dfb049ff"
+                  minimumTrackTintColor="#1768BF"
                   maximumTrackTintColor="#d3d3d3"
                   thumbTintColor={Config.Colors.primary}
                 />

@@ -448,6 +448,10 @@ export default function Home() {
     }
   };
 
+  const handleLoginWithOPass = () => {
+    navigation.navigate("LoginWithPass");
+  };
+
   const renderLoginScreen = () => (
     <View style={simpleStyles.container}>
       <Text style={simpleStyles.mainTitle}>
@@ -556,18 +560,27 @@ export default function Home() {
           disabled={!isInputValid()}
           loading={isLoading}
         />
+        <TouchableOpacity
+          style={simpleStyles.otpLoginButton}
+          onPress={handleLoginWithOPass}
+        >
+          <Text style={simpleStyles.otpLoginText}>Login with Password</Text>
+        </TouchableOpacity>
 
         <View style={simpleStyles.trustBadge}>
           <Text style={simpleStyles.trustIcon}>✔️</Text>
           <Text style={simpleStyles.trustText}>Trusted by many Brokers</Text>
         </View>
-        {/*         
-        <TouchableOpacity style={simpleStyles.registerContainer} onPress={() => navigation?.navigate('Registration')}>
+
+        <TouchableOpacity
+          style={simpleStyles.registerContainer}
+          onPress={() => navigation?.navigate("Registration")}
+        >
           <Text style={simpleStyles.registerText}>
             Don't have an account?
             <Text style={simpleStyles.registerLink}> Register Now</Text>
           </Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -830,7 +843,7 @@ const simpleStyles = StyleSheet.create({
   },
   registerContainer: {
     marginTop: heightToDp(2),
-    marginBottom: heightToDp(1),
+    marginBottom: heightToDp(8),
   },
   registerText: {
     textAlign: "center",
@@ -910,4 +923,17 @@ const simpleStyles = StyleSheet.create({
   resendDisabled: {
     color: "#AAB7B8",
   },
+    otpLoginButton: {
+      marginTop: heightToDp(2),
+      marginBottom: heightToDp(2),
+      paddingVertical: heightToDp(1.5),
+      alignItems: 'center',
+    },
+    otpLoginText: {
+      fontSize: widthToDp(3.8),
+      color: '#000000',
+      fontWeight: '600',
+      fontFamily: Config.fontFamilys?.Poppins_SemiBold || 'System',
+      textDecorationLine: 'underline',
+    },
 });
