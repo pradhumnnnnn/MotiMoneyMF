@@ -360,12 +360,12 @@ export default function LoginWithPass() {
           </Text>
         </TouchableOpacity>
 
-        <View style={simpleStyles.trustBadge}>
+        {/* <View style={simpleStyles.trustBadge}>
           <Text style={simpleStyles.trustIcon}>✔️</Text>
           <Text style={simpleStyles.trustText}>
             Trusted by many Brokers
           </Text>
-        </View>
+        </View> */}
         
         <TouchableOpacity style={simpleStyles.registerContainer} onPress={() => navigation?.navigate('Registration')}>
           <Text style={simpleStyles.registerText}>
