@@ -42,10 +42,8 @@ const SetPasswordModal = ({
   const confirmPasswordRefs = useRef([]);
   const scrollViewRef = useRef();
 
-  // Auto-focus first input when modal opens
   useEffect(() => {
     if (visible) {
-      // Small delay to ensure modal is fully rendered
       const timer = setTimeout(() => {
         passwordRefs.current[0]?.focus();
       }, 500);
@@ -79,7 +77,6 @@ const SetPasswordModal = ({
 
   useEffect(() => {
     if (visible) {
-      // Reset states when modal opens
       setPassword(['', '', '', '']);
       setConfirmPassword(['', '', '', '']);
       setErrors({});
@@ -97,7 +94,6 @@ const SetPasswordModal = ({
         }),
       ]).start();
     } else {
-      // Dismiss keyboard when modal closes
       Keyboard.dismiss();
       setKeyboardHeight(0);
       setIsKeyboardVisible(false);
@@ -200,7 +196,7 @@ const SetPasswordModal = ({
         AsyncStorage.getItem('clientCode'),
         AsyncStorage.getItem('token')
       ]);
-
+console.log(clientCode, token)
       if (!clientCode || !token) {
         throw new Error('Authentication data not found');
       }
@@ -222,7 +218,7 @@ const SetPasswordModal = ({
       });
 
       const data = await response.json();
-
+console.log("change resoise",data)
       if (!response.ok) {
         throw new Error(data.message || `Failed to set password. Status: ${response.status}`);
       }
@@ -315,12 +311,11 @@ const SetPasswordModal = ({
     onClose();
   };
 
-  // Calculate modal height - full screen when keyboard is open
   const getModalHeight = () => {
     if (isKeyboardVisible) {
-      return screenHeight; // Full screen when keyboard is open
+      return screenHeight; 
     }
-    return screenHeight * 0.7; // 70% when keyboard is closed
+    return screenHeight * 0.8; // 70% when keyboard is closed
   };
 
   return (
@@ -621,7 +616,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: 12,
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   setButton: {
     backgroundColor: "#2196F3",

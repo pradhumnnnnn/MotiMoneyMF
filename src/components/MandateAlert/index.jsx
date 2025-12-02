@@ -50,7 +50,7 @@ const MandateAlert = ({
     if (visible) {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: screenHeight * 0.6, 
+          toValue: screenHeight * 0.5, 
           duration: 300,
           useNativeDriver: true,
         }),
@@ -91,7 +91,7 @@ const MandateAlert = ({
       statusBarTranslucent
       onRequestClose={showCancelButton ? onClose : undefined}
     >
-      <StatusBar backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" />
+      <StatusBar backgroundColor="rgba(0,0,0,0.5)" barStyle="dark-content" />
       
       {/* Overlay */}
       <Animated.View 

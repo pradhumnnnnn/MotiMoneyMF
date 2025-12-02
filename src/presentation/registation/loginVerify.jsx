@@ -312,7 +312,7 @@ const LoginVerify = ({
                 style={styles.logo}
                 resizeMode='contain'
               />
-              <Text style={styles.logoText}>MotiMoney</Text>
+              <Text style={styles.logoText}>MotiMoney MF</Text>
             </View>
 
             {/* Title */}

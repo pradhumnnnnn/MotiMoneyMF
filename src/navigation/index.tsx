@@ -68,6 +68,7 @@ import ChangePassword from '../components/changePassword';
 import SipInterface2 from '../components/SipInterface/SipInterface2';
 import NFO from '../presentation/screens/NFO';
 import LoginWithPass from '../presentation/screens/loginWithPass';
+import NFOInvest from '../presentation/NFOInvest';
 const Stack = createNativeStackNavigator<StackParamList>();
 const Tab = createBottomTabNavigator();
 
@@ -166,7 +167,7 @@ const ExitNotification = ({ visible, onHide }) => {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.notificationText}>Press back again to exit MotiMoney</Text>
+        <Text style={styles.notificationText}>Press back again to exit MotiMoney MF</Text>
       </View>
     </Animated.View>
   );
@@ -254,7 +255,7 @@ function BottomTabNavigator() {
           tabBarBackground: () => (
             <View
               style={{
-                position: 'absolute',
+                // position: 'absolute',
                 top: 0,
                 left: 0,
                 bottom: 0,
@@ -263,7 +264,7 @@ function BottomTabNavigator() {
             />
           ),
           tabBarStyle: {
-            height: widthToDp(18),
+            // height: widthToDp(24),
             backgroundColor: '#2B8DF6',
             position: 'absolute',
             shadowOffset: {
@@ -292,8 +293,8 @@ function BottomTabNavigator() {
               borderTopWidth: focused ? 3 : 0, 
               borderTopColor: focused ? Config.Colors.white : 'transparent', 
               borderRadius: 2, 
-              width: widthToDp(12), 
-              height: widthToDp(12),
+              width: widthToDp(10), 
+              height: widthToDp(10),
             };
 
             if (route.name === ScreenName.Profile) {
@@ -438,6 +439,7 @@ export default function RootNavigator() {
         component={PaymentModal}
       />
       <Stack.Screen name={ScreenName.KycRegi} component={KycRegi} />
+      <Stack.Screen name={ScreenName.NFoInvest} component={NFOInvest} />
       <Stack.Screen name={ScreenName.Settings} component={Setting} />
       <Stack.Screen name={ScreenName.Account} component={Account} />
       <Stack.Screen

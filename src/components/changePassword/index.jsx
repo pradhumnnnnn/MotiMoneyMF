@@ -10,6 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     StatusBar,
+    SafeAreaView,          
 } from 'react-native';
 import { widthToDp, heightToDp } from '../../helpers/Responsive'; // Adjust import path as needed
 import SInfoSvg from '../../presentation/svgs';
@@ -17,8 +18,10 @@ import * as Config from "../../helpers/Config"
 import { useDispatch, useSelector } from 'react-redux';
 import { setBiometricPin } from '../../store/slices/loginSlice';
 import Rbutton from '../Rbutton';
+import { apiPostService } from '../../helpers/services';
 const ChangePassword = ({ navigation }) => {
     const dispatch = useDispatch();
+     const LoginData = useSelector((state) => state.login.loginData);
     const [newPassword, setNewPassword] = useState(['', '', '', '']);
     const [confirmPassword, setConfirmPassword] = useState(['', '', '', '']);
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -82,30 +85,54 @@ const ChangePassword = ({ navigation }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = () => {
-        if (validatePasswords()) {
-            const newPass = newPassword.join('');
+    const handleSubmit = async () => {
+  // Validate first
+  const isValid = validatePasswords();
+  if (!isValid) return;
 
-dispatch(setBiometricPin(newPass));
-            Alert.alert(
-                'Success',
-                'Password changed successfully!',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            setNewPassword(['', '', '', '']);
-                            setConfirmPassword(['', '', '', '']);
-                            setErrors({});
-                            navigation.goBack(); // Navigate back after successful change
-                        }
-                    }
-                ]
-            );
+  try {
+    const newPass = newPassword.join('');
 
-            console.log('New Password:', newPass);
-        }
+    const payload = {
+      referenceId: LoginData?.user?.clientCode,
+      password: newPass
     };
+
+    // Store biometric pin locally
+    dispatch(setBiometricPin(newPass));
+
+    // API Call
+    const response = await apiPostService(
+      "/api/v1/user/onboard/login/set-password",
+      payload
+    );
+console.log("result",response,payload)
+    if (response?.status === 200 || response?.success) {
+      Alert.alert(
+        "Success",
+        "Password changed successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setNewPassword(['', '', '', '']);
+              setConfirmPassword(['', '', '', '']);
+              setErrors({});
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Error", response?.message || "Something went wrong.");
+    }
+
+  } catch (error) {
+    console.log("Set Password Error:", error);
+    Alert.alert("Error", "Unable to change password. Try again later.");
+  }
+};
+
 
     const renderPasswordInputs = (password, refs, passwordType, label, showPassword, toggleShow) => (
         <View style={styles.passwordSection}>
@@ -145,6 +172,8 @@ dispatch(setBiometricPin(newPass));
     );
 
     return (
+        <SafeAreaView style={styles.safeArea}>
+
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -207,10 +236,15 @@ dispatch(setBiometricPin(newPass));
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+     safeArea: {
+    flex: 1,
+    backgroundColor: Config.Colors.cyan_blue, // same as your screen bg
+  },
     container: {
         flex: 1,
         backgroundColor: Config.Colors.cyan_blue,
@@ -276,10 +310,12 @@ const styles = StyleSheet.create({
     passwordContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: widthToDp(2),
+        paddingHorizontal: Platform.OS==="ios"?widthToDp(5):widthToDp(2),
+
         // borderWidth:1
     },
     digitInput: {
+        paddingTop:Platform.OS==="ios"?widthToDp(4):widthToDp(2),
         width: widthToDp(12),
         // height: widthToDp(12),
         fontSize: widthToDp(4),

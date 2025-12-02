@@ -144,7 +144,7 @@ const BasicDetails = ({
                                 style={styles.logo}
                                 resizeMode='contain'
                             />
-                            <Text style={styles.logoText}>MotiMoney</Text>
+                            <Text style={styles.logoText}>MotiMoney MF</Text>
                         </View>
 
                         <View style={styles.titleContainer}>
@@ -548,8 +548,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderTopLeftRadius: widthToDp(5),
         borderTopRightRadius: widthToDp(5),
-        maxHeight: '90%',
-        height: 'auto',
+         maxHeight: "85%",        // reduced for iOS safe area
+    width: "100%",
+    flexShrink: 1,   
+    paddingBottom: heightToDp(2),
     },
     modalHandle: {
         width: widthToDp(10),
@@ -561,7 +563,7 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         padding: widthToDp(5),
-        flex: 1,
+        // flex: 1,
         paddingBottom: heightToDp(2),
     },
     modalTitle: {

@@ -17,6 +17,7 @@ import * as Config from "../../helpers/Config"
 import { useDispatch, useSelector } from 'react-redux';
 import { setBiometricPin } from '../../store/slices/loginSlice';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const ChangePassword = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
@@ -149,6 +150,7 @@ const ChangePassword = () => {
     );
 
     return (
+        <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -206,6 +208,7 @@ const ChangePassword = () => {
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
@@ -214,6 +217,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Config.Colors.cyan_blue,
     },
+     safeArea: {
+  flex: 1,
+//   paddingTop:heightToDp(20),
+  backgroundColor: "#ffffff", // or Config.Colors.cyan_blue if needed
+},
+androidStatusBar: {
+  height: StatusBar.currentHeight,
+  backgroundColor: "transparent",
+},
     androidStatusBar: {
         height: StatusBar.currentHeight,
         // backgroundColor: Config.Colors.cyan_blue,

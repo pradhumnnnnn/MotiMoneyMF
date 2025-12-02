@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  SafeAreaView,
   Platform,
   BackHandler,
   LayoutAnimation,
@@ -19,6 +18,7 @@ import { setSipInterface } from '../../../store/slices/marketSlice';
 import Loader from '../../../components/handAnimation';
 import * as Config from '../../../helpers/Config';
 import { heightToDp } from '../../../helpers/Responsive';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -191,7 +191,7 @@ const InvestmentList = ({ navigation }) => {
                   Allotted Units: {allottedUnits}
                 </Text>
                 <Text style={styles.sipItemDetail}>
-                  Amount: {allotmentData?.wbr2Details?.amount ?? '--'}
+                  Amount: {allotmentData?.allottedAmount ?? '--'}
                 </Text>
               </TouchableOpacity>
             );
@@ -402,7 +402,7 @@ const InvestmentList = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FB' },
   androidStatusBar: {
-    height: StatusBar.currentHeight,
+    // height: StatusBar.currentHeight,
     backgroundColor: '#FFFFFF',
   },
   navbar: {

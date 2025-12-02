@@ -22,8 +22,8 @@ import { apiGetService } from '../../../helpers/services';
 import { setInvestment, setMarketData } from '../../../store/slices/marketSlice';
 import { useDispatch } from 'react-redux';
 
-const NFO = () => {
-  const navigation = useNavigation();
+const NFO = ({navigation}) => {
+  // const navigation = useNavigation();
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('LIVE');
   const [nfoData, setNfoData] = useState([]);
@@ -40,16 +40,11 @@ const NFO = () => {
       setError(null);
       setLoading(true);
       
-      const response = await apiGetService(`/api/v1/mutualfund/update/nfo/live`);
+      const response = await apiGetService(`/api/v1/mutualfund/nfo/live`);
 
-    //   const result = await response.json();
-      console.log('NFO Fetch Response:', response?.data);
-      
       if (response?.data) {
-        // Transform and filter the data based on active tab
         const transformedData = transformNFOData(response?.data, activeTab);
         setNfoData(transformedData);
-        console.log(`Transformed NFO Data for tab ${activeTab}:`, transformedData);
       } else {
         setError('Failed to fetch data');
       }
@@ -60,73 +55,56 @@ const NFO = () => {
     }
   };
 
-const transformNFOData = (apiData, tab) => {
-  if (!apiData?.data) return [];
+  // ✅ FIXED TRANSFORM LOGIC
+  const transformNFOData = (apiData, tab) => {
+    if (!apiData?.data) return [];
 
-  const currentDate = new Date();
+    let sourceData = [];
+    if (tab === "LIVE") sourceData = apiData.data.active || [];
+    if (tab === "UPCOMING") sourceData = apiData.data.upcoming || [];
+    if (tab === "CLOSED") sourceData = apiData.data.recentlyClosed || [];
 
-  let sourceData = [];
-  switch (tab) {
-    case 'LIVE':
-      sourceData = apiData.data.active || [];
-      break;
-    case 'UPCOMING':
-      sourceData = apiData.data.upcoming || [];
-      break;
-    case 'CLOSED':
-      sourceData = apiData.data.recentlyClosed || [];
-      break;
-    default:
-      sourceData = [];
-  }
+    return sourceData.map((item, index) => {
+      const v = item.variant;
 
-  const filteredData = sourceData
-    .filter(item => {
-      const openDate = new Date(item.startDate || item.openDate);
-      const closeDate = new Date(item.endDate || item.closeDate);
-      if (isNaN(openDate) || isNaN(closeDate)) return false;
+      return {
+        id: `${item._id}-${v.schemeCode}-${index}`,   // FIXED UNIQUE KEY
+        _id: item._id,
 
-      // Condition 1: Open date should be within the last 20 days
-      const diffOpenDays = (currentDate - openDate) / (1000 * 60 * 60 * 24);
-      const isRecentOpen = diffOpenDays <= 20 && diffOpenDays >= 0;
+        schemeName: item.schemeName,
+        schemeType: item.schemeType,
+        amcCode: item.amcCode,
+        amcName: getFundHouseName(item.amcCode),
 
-      // Condition 2: Close date should NOT be within next 4-5 days
-      const diffCloseDays = (closeDate - currentDate) / (1000 * 60 * 60 * 24);
-      const isClosingSoon = diffCloseDays <= 5 && diffCloseDays >= 0;
+        // FIXED DATES
+        startDate: v.startDate,
+        endDate: v.endDate,
+        reOpeningDate: v.reopeningDate,
 
-      // Show only if recently opened and not closing soon
-      return isRecentOpen && !isClosingSoon;
-    })
-    .map((item, index) => ({
-      id: item._id || `nfo-${index}-${Date.now()}`,
-      schemeName: item.schemeName || 'N/A',
-      category: item.schemeType || 'Other',
-      openDate: formatDate(item.startDate || item.openDate),
-      closeDate: formatDate(item.endDate || item.closeDate),
-      minInvestment: 5000,
-      fundHouse: getFundHouseName(item.amcCode),
-      riskLevel: getRiskLevel(item.schemeType),
-      rating: 4,
-      description: `${item.schemeType} Fund - ${item.schemePlan || 'Regular Plan'}`,
-      logo: getFundLogo(item.amcCode),
-      schemeCode: item.schemeCode,
-      purchaseAllowed: item.purchaseAllowed,
-      sipFlag: item.sipFlag,
-      originalData: item,
-    }));
+        minInvestment: Number(v.minimumPurchaseAmount),
+        sipFlag: v.sipFlag,
+        purchaseAllowed: v.purchaseAllowed,
 
-  return filteredData;
-};
+        fundHouse: getFundHouseName(item.amcCode),
+        rating: 4,
+        riskLevel: getRiskLevel(item.schemeType),
 
-  // Helper function to format dates
+        description: `${item.schemeType} - ${v.schemePlan}`,
+        logo: "https://cdn5.vectorstock.com/i/1000x1000/44/19/mutual-fund-vector-7404419.jpg",
+
+        schemeCode: v.schemeCode,
+
+        variant: v,
+        originalData: item
+      };
+    });
+  };
+
+  // Date Formatter
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
@@ -137,50 +115,23 @@ const transformNFOData = (apiData, tab) => {
     }
   };
 
-  // Helper function to get fund house name from amcCode
+  const getRiskLevel = (type) => {
+    if (!type) return "Moderate";
+    const t = type.toLowerCase();
+    if (t.includes("equity")) return "High";
+    if (t.includes("debt")) return "Low";
+    return "Moderate";
+  };
+
   const getFundHouseName = (amcCode) => {
-    if (!amcCode) return 'N/A';
-    
     const fundHouses = {
-      'SBIMutualFund_MF': 'SBI Mutual Fund',
-      'BirlaSunLifeMutualFund_MF': 'Aditya Birla Sun Life',
-      'GROWWMUTUALFUND_MF': 'Groww Mutual Fund',
-      'ICICIPrudentialMutualFund_MF': 'ICICI Prudential',
-      'HDFCMutualFund_MF': 'HDFC Mutual Fund',
-      'NipponIndiaMutualFund_MF': 'Nippon India',
-      'UTIMutualFund_MF': 'UTI Mutual Fund',
-      'KotakMutualFund_MF': 'Kotak Mahindra',
-      'AxisMutualFund_MF': 'Axis Mutual Fund'
+      DSP_MF: "DSP Mutual Fund",
+      AXISMUTUALFUND_MF: "Axis Mutual Fund",
+      KOTAKMAHINDRAMF: "Kotak Mutual Fund",
+      NAVIMUTUALFUND_MF: "Navi Mutual Fund",
+      MIRAEASSET: "Mirae Asset",
     };
-
-    return fundHouses[amcCode] || amcCode.replace('_MF', '').replace(/([A-Z])/g, ' $1').trim();
-  };
-
-  // Helper function to determine risk level based on scheme type
-  const getRiskLevel = (schemeType) => {
-    if (!schemeType) return 'Moderate';
-    
-    const type = schemeType.toLowerCase();
-    if (type.includes('equity') || type.includes('sector')) return 'High';
-    if (type.includes('debt') || type.includes('liquid')) return 'Low';
-    return 'Moderate';
-  };
-
-  // Helper function to get fund logo
-  const getFundLogo = (amcCode) => {
-    const fundLogos = {
-      'SBIMutualFund_MF': 'https://via.placeholder.com/60/9013FE/FFFFFF?text=SBI',
-      'BirlaSunLifeMutualFund_MF': 'https://via.placeholder.com/60/4A90E2/FFFFFF?text=ABSL',
-      'GROWWMUTUALFUND_MF': 'https://via.placeholder.com/60/00D09F/FFFFFF?text=GROWW',
-      'ICICIPrudentialMutualFund_MF': 'https://via.placeholder.com/60/0047AB/FFFFFF?text=ICICI',
-      'HDFCMutualFund_MF': 'https://via.placeholder.com/60/50E3C2/FFFFFF?text=HDFC',
-      'NipponIndiaMutualFund_MF': 'https://via.placeholder.com/60/666666/FFFFFF?text=NIPPON',
-      'UTIMutualFund_MF': 'https://via.placeholder.com/60/FF6B6B/FFFFFF?text=UTI',
-      'KotakMutualFund_MF': 'https://via.placeholder.com/60/F5A623/FFFFFF?text=KOTAK',
-      'AxisMutualFund_MF': 'https://via.placeholder.com/60/417505/FFFFFF?text=AXIS'
-    };
-
-    return fundLogos[amcCode] || 'https://via.placeholder.com/60/666666/FFFFFF?text=MF';
+    return fundHouses[amcCode] || amcCode;
   };
 
   const onRefresh = async () => {
@@ -189,26 +140,14 @@ const transformNFOData = (apiData, tab) => {
     setRefreshing(false);
   };
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
-  const retryFetch = () => {
-    setError(null);
-    fetchNFOData();
-  };
-
   const Header = () => (
     <LinearGradient
       colors={['#2B8DF6', '#2B8DF6']}
       style={styles.headerGradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
     >
       <Image
         source={bgVector}
         style={[StyleSheet.absoluteFillObject, { opacity: 0.1 }]}
-        resizeMode="cover"
       />
       <View style={styles.headerContent}>
         <TouchableOpacity
@@ -225,60 +164,30 @@ const transformNFOData = (apiData, tab) => {
     </LinearGradient>
   );
 
-  const TabButton = ({ title, isActive, onPress }) => (
-    <TouchableOpacity
-      style={[styles.tabButton, isActive && styles.activeTab]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text style={[styles.tabText, isActive && styles.activeTabText]}>
-        {title}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const RiskIndicator = ({ level }) => {
-    const getRiskColor = () => {
-      switch (level) {
-        case 'Low': return '#4CAF50';
-        case 'Moderate': return '#FF9800';
-        case 'High': return '#F44336';
-        default: return '#666';
-      }
-    };
-
-    return (
-      <View style={[styles.riskIndicator, { backgroundColor: getRiskColor() }]}>
-        <Text style={styles.riskText}>{level}</Text>
-      </View>
-    );
-  };
-
-  const RatingStars = ({ rating }) => {
-    return (
-      <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>⭐ {rating}</Text>
-      </View>
-    );
-  };
-
-  const NFOCard = ({ item }) => (
+  // ------------------------------------------------------------
+  // CARD COMPONENT (STYLING UNTOUCHED)
+  // ------------------------------------------------------------
+  const NFOCard = ({ item }) => {
+    // console.log("NFO",item)
+    return(
+    
     <TouchableOpacity 
       style={styles.nfoCard}
       activeOpacity={0.8}
-        onPress={() => {
-              dispatch(setMarketData(item?.originalData));
-              dispatch(setInvestment(item?.originalData));
-              navigation.navigate('MarketWatch');
-            }}
+      onPress={() => {
+        // dispatch(setMarketData(item.originalData));
+        dispatch(setInvestment(item.originalData));
+        navigation.navigate("NFoInvest");
+      }}
     >
       <View style={styles.cardHeader}>
         <View style={styles.fundLogoContainer}>
           <Image 
-            source={{ uri: 'https://cdn5.vectorstock.com/i/1000x1000/44/19/mutual-fund-vector-7404419.jpg' }} 
+            source={{ uri: item.logo }} 
             style={styles.fundLogo} 
           />
         </View>
+
         <View style={styles.fundInfo}>
           <Text style={styles.schemeName} numberOfLines={2}>
             {item.schemeName}
@@ -286,29 +195,36 @@ const transformNFOData = (apiData, tab) => {
           <Text style={styles.fundHouse}>{item.fundHouse}</Text>
           <Text style={styles.schemeCode}>{item.schemeCode}</Text>
         </View>
-        <RatingStars rating={item.rating} />
+
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>⭐ {item.rating}</Text>
+        </View>
       </View>
 
       <View style={styles.cardDetails}>
+        
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Category</Text>
-            <Text style={styles.detailValue}>{item.category}</Text>
+            <Text style={styles.detailValue}>{item.schemeType}</Text>
           </View>
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Min Investment</Text>
-            <Text style={styles.detailValue}>₹{item.minInvestment?.toLocaleString()}</Text>
+            <Text style={styles.detailValue}>₹{item.minInvestment}</Text>
           </View>
         </View>
 
+        {/* FIXED OPEN/CLOSE DATE */}
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Open Date</Text>
-            <Text style={styles.detailValue}>{item.openDate}</Text>
+            <Text style={styles.detailValue}>{formatDate(item.startDate)}</Text>
           </View>
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Close Date</Text>
-            <Text style={styles.detailValue}>{item.closeDate}</Text>
+            <Text style={styles.detailValue}>{formatDate(item.endDate)}</Text>
           </View>
         </View>
 
@@ -332,110 +248,74 @@ const transformNFOData = (apiData, tab) => {
         </View>
 
         <View style={styles.cardFooter}>
-          <RiskIndicator level={item.riskLevel} />
+          <View style={[styles.riskIndicator, { backgroundColor: "#2B8DF6" }]}>
+            <Text style={styles.riskText}>{item.riskLevel}</Text>
+          </View>
+
+          {/* FIXED INVEST BUTTON */}
           <TouchableOpacity 
             style={[
               styles.investButton,
               item.purchaseAllowed !== 'Y' && styles.disabledButton
             ]}
-        onPress={() => {
-              dispatch(setMarketData(item?.originalData));
-               dispatch(setInvestment(item?.originalData));
-              navigation.navigate('MarketWatch');
-            }}
-            disabled={activeTab === 'LIVE' && item.purchaseAllowed !== 'Y'}
+           onPress={() => {
+        // dispatch(setMarketData(item.originalData));
+        dispatch(setInvestment(item.originalData));
+        navigation.navigate("NFoInvest");
+      }}
+            disabled={item.purchaseAllowed !== 'Y'}
           >
             <Text style={styles.investButtonText}>
-              {activeTab === 'LIVE' ? 
-                (item.purchaseAllowed === 'Y' ? 'Invest Now' : 'Not Available') : 
-                'View Details'}
+              {item.purchaseAllowed === 'Y' ? 'Invest Now' : 'Not Available'}
             </Text>
           </TouchableOpacity>
         </View>
+
       </View>
+    </TouchableOpacity>
+  )};
+
+  const TabButton = ({ title, isActive, onPress }) => (
+    <TouchableOpacity
+      style={[styles.tabButton, isActive && styles.activeTab]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.tabText, isActive && styles.activeTabText]}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 
-  const EmptyState = () => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyStateTitle}>No NFOs Available</Text>
-      <Text style={styles.emptyStateText}>
-        There are no {activeTab.toLowerCase()} New Fund Offers for the current month.
-      </Text>
-    </View>
-  );
-
-  const ErrorState = () => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyStateTitle}>Error Loading Data</Text>
-      <Text style={styles.emptyStateText}>
-        Failed to load NFO data. Please check your connection and try again.
-      </Text>
-      <TouchableOpacity style={styles.retryButton} onPress={retryFetch}>
-        <Text style={styles.retryButtonText}>Try Again</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+      <StatusBar barStyle="dark-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
       <View style={styles.tabContainer}>
-        <TabButton 
-          title="Live NFOs" 
-          isActive={activeTab === 'LIVE'} 
-          onPress={() => handleTabChange('LIVE')} 
-        />
-        <TabButton 
-          title="Upcoming" 
-          isActive={activeTab === 'UPCOMING'} 
-          onPress={() => handleTabChange('UPCOMING')} 
-        />
-        <TabButton 
-          title="Closed" 
-          isActive={activeTab === 'CLOSED'} 
-          onPress={() => handleTabChange('CLOSED')} 
-        />
+        <TabButton title="Live NFOs" isActive={activeTab === 'LIVE'} onPress={() => setActiveTab('LIVE')} />
+        <TabButton title="Upcoming" isActive={activeTab === 'UPCOMING'} onPress={() => setActiveTab('UPCOMING')} />
+        <TabButton title="Closed" isActive={activeTab === 'CLOSED'} onPress={() => setActiveTab('CLOSED')} />
       </View>
 
       <View style={styles.content}>
-        {loading && !refreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2B8DF6" />
-            <Text style={styles.loadingText}>Loading NFOs...</Text>
-          </View>
-        ) : error && nfoData.length === 0 ? (
-          <ErrorState />
+        {loading ? (
+          <ActivityIndicator size="large" color="#2B8DF6" />
         ) : (
           <FlatList
             data={nfoData}
             renderItem={({ item }) => <NFOCard item={item} />}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={[
-              styles.listContent,
-              nfoData.length === 0 && styles.emptyListContent
-            ]}
-            ListEmptyComponent={EmptyState}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={['#2B8DF6']}
-                tintColor="#2B8DF6"
-              />
-            }
+            keyExtractor={(item) => item.id}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           />
         )}
       </View>
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

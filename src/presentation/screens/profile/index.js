@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Image,
   TouchableOpacity,
@@ -33,6 +32,7 @@ import HandAnimation from '../../../components/handAnimation';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SetPasswordModal from '../../../components/setPassModal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -40,17 +40,10 @@ export default function Profile({}) {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const Alert = useSelector(state => state.marketWatch.mandateAlert);
-  const loginData = useSelector(state => state?.login?.loginData);
-  
-  // Check if password is set - based on your Redux structure
+const loginData = useSelector(state => state?.login?.loginData);
   const hasPassword = useSelector(state => {
-    // Check multiple possible locations where password might be stored
-    return state?.login?.pin || 
-           state?.login?.loginData?.pin || 
-           state?.login?.loginData?.user?.hasPassword ||
-           state?.pass?.passData?.hasPassword;
+    return  state?.hassPass?.hassPassWord?.data?.hasPassword ||state?.hassPass?.hassPassWord ;
   });
-
   const [isLoading, setIsLoading] = useState(true);
   const [mandateData, setMandateData] = useState(null);
   const [showMandateAlert, setShowMandateAlert] = useState(false);
@@ -194,7 +187,7 @@ export default function Profile({}) {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+      <StatusBar barStyle="dark-content" backgroundColor="#2B8DF6" />
 
       {isLoading ? (
         <HandAnimation />
@@ -285,7 +278,7 @@ export default function Profile({}) {
 
               {/* Collapsing Portfolio Info */}
               <Animated.View
-                style={{ opacity: contentOpacity, marginTop: heightToDp(2) }}
+                style={{ opacity: contentOpacity, marginTop: heightToDp(2),marginBottom:heightToDp(2)}}
               >
                 <TouchableOpacity
                   onPress={() => navigation?.navigate('Dashboard')}
@@ -350,7 +343,7 @@ export default function Profile({}) {
               { useNativeDriver: true },
             )}
           >
-            <View style={{ height: heightToDp(35) }} />
+            <View style={{ height: heightToDp(30) }} />
             <StartInvestingCard
               onStartInvesting={() => navigation.navigate('SipScheme')}
             />
@@ -394,12 +387,9 @@ const styles = StyleSheet.create({
   },
   safeArea: { flex: 1, position: 'relative' },
   androidStatusBar: {
-    height: StatusBar.currentHeight,
+    // height: StatusBar.currentHeight,
     backgroundColor: '#2B8DF6',
   },
-  // ... rest of your styles
-
-  // Sticky Header Styles
   stickyHeader: {
     position: 'absolute',
     top: 0,
@@ -411,13 +401,15 @@ const styles = StyleSheet.create({
   },
   stickyHeaderGradient: {
     flex: 1,
-    paddingHorizontal: widthToDp(4),
+    paddingHorizontal: widthToDp(1),
     justifyContent: 'center',
+
   },
   stickyHeaderContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+     
   },
   stickyLeftSection: {
     flexDirection: 'row',
@@ -441,7 +433,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stickyPortfolioSection: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-center',
+    marginRight:widthToDp(2)
   },
   stickyPortfolioText: {
     color: Config.Colors.white,
@@ -468,7 +461,7 @@ const styles = StyleSheet.create({
   headerGradientOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingBottom: 20,
+    // paddingBottom: 20,
   },
   headerRow: {
     paddingHorizontal: widthToDp(4),
@@ -522,9 +515,11 @@ const styles = StyleSheet.create({
     fontSize: widthToDp(7),
   },
   portfolioBalanceCard: {
+    
     marginHorizontal: widthToDp(4),
     borderRadius: widthToDp(1),
-    padding: widthToDp(5),
+    padding: Platform.OS === 'ios' ? widthToDp(5) : widthToDp(3),
+
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
@@ -563,7 +558,7 @@ const styles = StyleSheet.create({
   positiveReturns: { color: '#4CD964' },
   negativeReturns: { color: '#FF3B30' },
   scrollView: { flex: 1, backgroundColor: Config.Colors.white },
-  scrollViewContent: { flexGrow: 1 },
+  // scrollViewContent: { flexGrow: 1 },
   footer: {
     justifyContent: 'center',
     alignItems: 'center',

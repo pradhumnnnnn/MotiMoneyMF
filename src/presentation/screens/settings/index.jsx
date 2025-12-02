@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   BackHandler,
@@ -21,6 +20,8 @@ import SInfoSvg from '../../svgs';
 import { setBiometricEnabled, setBiometricPin } from '../../../store/slices/loginSlice';
 import LinearGradient from 'react-native-linear-gradient';
 import bgVector from '../../../assets/Icons/vector.png';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { persistor } from '../../../store/store';
 
 // Profile data array with proper icons
 const Profile_Data = [
@@ -66,13 +67,13 @@ const Profile_Data = [
     route: 'ChangePassword',
     color: '#795548',
   },
-  // {
-  //   id: 6,
-  //   name: 'Biometric Settings',
-  //   icon: SInfoSvg.BiometricIcon,
-  //   route: 'Biometric',
-  //   color: '#00BCD4',
-  // },
+  {
+    id: 6,
+    name: 'Biometric Settings',
+    icon: SInfoSvg.BiometricIcon,
+    route: 'Biometric',
+    color: '#00BCD4',
+  },
 ];
 
 export default function Setting({ navigation }) {
@@ -129,12 +130,25 @@ export default function Setting({ navigation }) {
     `${userData?.user?.primaryHolderFirstName} ${userData?.user?.primaryHolderLastName}`,
   );
 
-  const Logout = async () => {
+const Logout = async () => {
+  try {
+    // Reset biometric values
     dispatch(setBiometricPin(''));
     dispatch(setBiometricEnabled(false));
+
+    // Reset whole Redux state + persisted storage
+    dispatch({ type: 'RESET_APP' });
+
+    // Clear AsyncStorage (optional but safe)
     await AsyncStorage.clear();
+
     navigation.navigate('Home');
-  };
+
+  } catch (error) {
+    console.log("Logout error:", error);
+  }
+};
+
 
   const Header = () => (
     <LinearGradient
@@ -215,7 +229,7 @@ export default function Setting({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' && <View style={styles.androidStatusBar} />}
-      <StatusBar barStyle="light-content" backgroundColor="#2B8DF6" />
+      <StatusBar barStyle="dark-content" backgroundColor="#2B8DF6" />
       
       <Header />
 
@@ -256,10 +270,15 @@ export default function Setting({ navigation }) {
               </View>
             </View>
           </View>
+             <View style={styles.profileList}>
+            {Profile_Data.map((item, index) => (
+              <ProfileItem key={item.id} item={item} index={index} />
+            ))}
+          </View>
         </Animated.View>
 
         {/* Profile Options Section */}
-        <Animated.View 
+        {/* <Animated.View 
           style={[
             styles.section,
             {
@@ -270,13 +289,13 @@ export default function Setting({ navigation }) {
             },
           ]}
         >
-          <Text style={styles.sectionTitle}>Account Settings</Text>
-          <View style={styles.profileList}>
+          {/* <Text style={styles.sectionTitle}>Account Settings</Text> */}
+          {/* <View style={styles.profileList}>
             {Profile_Data.map((item, index) => (
               <ProfileItem key={item.id} item={item} index={index} />
             ))}
-          </View>
-        </Animated.View>
+          </View> */}
+        {/* </Animated.View> */} 
 
         {/* Logout Button */}
         <Animated.View 
@@ -295,14 +314,14 @@ export default function Setting({ navigation }) {
             onPress={Logout}
             activeOpacity={0.8}
           >
-            <LinearGradient
+            {/* <LinearGradient
               colors={['#FF6B6B', '#FF5252']}
               style={styles.logoutGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-            >
+            > */}
               <Text style={styles.logoutText}>Logout</Text>
-            </LinearGradient>
+            {/* </LinearGradient> */}
           </TouchableOpacity>
         </Animated.View>
 
@@ -318,7 +337,7 @@ const styles = StyleSheet.create({
     backgroundColor: Config.Colors.cyan_blue,
   },
   androidStatusBar: {
-    height: StatusBar.currentHeight,
+    // height: StatusBar.currentHeight,
     backgroundColor: '#2B8DF6',
   },
 
@@ -369,7 +388,8 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: widthToDp(3),
+    borderTopRightRadius: widthToDp(3),
+    borderTopLeftRadius: widthToDp(3),
     padding: widthToDp(4),
     shadowColor: '#000',
     shadowOffset: {
@@ -427,7 +447,7 @@ const styles = StyleSheet.create({
 
   // Profile Options Section
   section: {
-    marginBottom: heightToDp(3),
+    marginBottom: heightToDp(2),
   },
   sectionTitle: {
     fontSize: widthToDp(4.2),
@@ -438,11 +458,12 @@ const styles = StyleSheet.create({
   },
   profileList: {
     backgroundColor: '#FFFFFF',
-    borderRadius: widthToDp(3),
+    borderBottomLeftRadius: widthToDp(3),
+    borderBottomRightRadius: widthToDp(3),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -450,13 +471,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   profileItem: {
-    borderBottomWidth: 1,
+    // borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   profileItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: heightToDp(2),
+    paddingVertical: heightToDp(1),
     paddingHorizontal: widthToDp(4),
   },
   iconContainer: {
@@ -488,6 +509,8 @@ const styles = StyleSheet.create({
     marginBottom: heightToDp(2),
   },
   logoutButton: {
+    backgroundColor:"#FF5252",
+    padding:Platform.OS === "ios"?heightToDp(2):heightToDp(2),
     borderRadius: widthToDp(3),
     overflow: 'hidden',
     shadowColor: '#000',
@@ -508,6 +531,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: widthToDp(4),
     fontWeight: '600',
+    textAlign:"center"
   },
 
   bottomPadding: {

@@ -14,18 +14,24 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { heightToDp, widthToDp } from "../../../helpers/Responsive";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { baseUrl, clientCode, store_key_login_details } from "../../../helpers/Config";
 import { storeData } from "../../../helpers/localStorage";
 import { useNavigation } from "@react-navigation/native";
 import ReactNativeBiometrics from "react-native-biometrics";
+import { setPass } from "../../../store/slices/passSlice";
+import { setLoginData } from "../../../store/slices/loginSlice";
+import * as Config from '../../../helpers/Config';
+
 
 const { height } = Dimensions.get('window');
 
 const BiometricLogin = () => {
+  const dispatch = useDispatch()
   const navigation = useNavigation();
   const LoginData = useSelector(state => state?.login?.loginData);
   const PIN = useSelector(state =>state?.login?.pin)
+  //  const DATA = useSelector(state => state.login);
   const [pin, setPin] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [slideAnim] = useState(new Animated.Value(height));
@@ -64,46 +70,66 @@ const BiometricLogin = () => {
   };
 
   // Verify PIN with API
-  const verifyPin = async (pinToVerify) => {
-    if(PIN !== pinToVerify) {
-      setPin
-      return Alert.alert('Invalid PIN', 'Please try again');
-    }
-    try {
-      setIsLoading(true);
-      const response = await fetch(`${baseUrl}/api/v1/user/function/verify/refresh`, {
-        method: 'GET',
+ const verifyPin = async (pinToVerify) => {
+  // Local validation before server call
+  if (PIN !== pinToVerify) {
+    setPin('');
+    return Alert.alert("Invalid PIN", "Please try again.");
+  }
+
+  try {
+    setIsLoading(true);
+
+    console.log(
+      "VERIFY PIN => Sending",
+      LoginData?.user?.clientCode,
+      PIN
+    );
+
+    const response = await fetch(
+      `${Config.baseUrl}/api/v1/user/onboard/login-pwd/verify`,
+      {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'refreshToken': `${LoginData.refreshToken}`,
-        }
-      });
-
-      const result = await response.json();
-      console.log("PIN Verification Result:", result);
-
-      if (response.ok && result?.accessToken) {
-        await storeData(
-          store_key_login_details,
-          result.accessToken,
-        );
-         await storeData(clientCode,LoginData?.user?.clientCode);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Profile' }],
-        });
-      } else {
-        Alert.alert('Invalid PIN', 'Please try again');
-        setPin('');
+          "Content-Type": "application/json",
+          refreshToken: `${LoginData.refreshToken}`,
+        },
+        body: JSON.stringify({
+          referenceId: LoginData?.user?.clientCode,
+          password: PIN,
+        }),
       }
-    } catch (error) {
-      console.error('PIN verification error:', error);
-      Alert.alert('Error', 'Failed to verify PIN. Please try again.');
-      setPin('');
-    } finally {
-      setIsLoading(false);
+    );
+
+    const result = await response.json();
+    console.log("PIN Verification Result:", result);
+
+    if (response.ok && result?.accessToken) {
+      // Save results
+      dispatch(setPass(true));
+      dispatch(setLoginData(result));
+
+      await storeData(Config.store_key_login_details, result.accessToken);
+      await storeData(Config.clientCode, LoginData?.user?.clientCode);
+
+      // Navigate
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Profile" }],
+      });
+    } else {
+      Alert.alert("Invalid PIN", "Please try again.");
+      setPin("");
     }
-  };
+  } catch (error) {
+    console.error("PIN verification error:", error);
+    Alert.alert("Error", "Failed to verify PIN. Please try again.");
+    setPin("");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   // Show fingerprint modal
   const showFingerprintModal = () => {
@@ -126,60 +152,91 @@ const BiometricLogin = () => {
     });
   };
 
-  const handleBiometricAuthentication = async () => {
-    try {
-      setIsLoading(true);
-      
-      const rnBiometrics = new ReactNativeBiometrics();
-          const { available, biometryType } = await rnBiometrics.isSensorAvailable();
-    
-          if (!available) {
-            Alert.alert('Biometrics not available', 'Please login normally');
-            return;
-          }
-    
-         
-          const { success, error } = await rnBiometrics.simplePrompt({
-            promptMessage: 'Sign in using biometric authentication',
-            cancelButtonText: 'Cancel'
-          });
-      if (success) {
-        const response = await fetch(`${baseUrl}/api/v1/user/function/verify/refresh`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'refreshToken': `${LoginData.refreshToken}`,
-          }
-        });
+ const handleBiometricAuthentication = async () => {
+  try {
+    setIsLoading(true);
 
-        const result = await response.json();
-        console.log("Biometric Verification Result:", result);
+    const rnBiometrics = new ReactNativeBiometrics();
+    const { available } = await rnBiometrics.isSensorAvailable();
 
-        if (response.ok && result?.accessToken) {
-          hideFingerprintModal();
-          await storeData(
-            store_key_login_details,
-            result.accessToken,
-          );
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Profile' }],
-          });
-        } else {
-          Alert.alert('Authentication Failed', 'Please try again');
-          hideFingerprintModal();
-        }
-      } else {
-        hideFingerprintModal();
-      }
-    } catch (error) {
-      console.error('Biometric verification error:', error);
-      Alert.alert('Error', 'Failed to authenticate. Please try again.');
-      hideFingerprintModal();
-    } finally {
-      setIsLoading(false);
+    if (!available) {
+      Alert.alert("Biometrics Not Available", "Please login normally.");
+      return;
     }
-  };
+
+    // Prompt biometric popup
+    const { success } = await rnBiometrics.simplePrompt({
+      promptMessage: "Sign in using biometric authentication",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!success) {
+      hideFingerprintModal();
+      return;
+    }
+
+    /** 
+     * 🚀 STEP 2: CALL YOUR NEW VERIFY API
+     * Uses stored PIN from your redux biometric state
+     */
+
+    console.log(
+      'BIOMETRIC => Sending',
+      LoginData?.user?.clientCode,
+      PIN
+    );
+
+    const response = await fetch(
+      `${Config.baseUrl}/api/v1/user/onboard/login-pwd/verify`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          refreshToken: `${LoginData.refreshToken}`,
+        },
+        body: JSON.stringify({
+          referenceId: LoginData?.user?.clientCode,
+          password: PIN
+        }),
+      }
+    );
+
+    const result = await response.json();
+    console.log("Biometric Server Result:", result);
+
+    // SUCCESS CASE
+    if (response.ok && result?.accessToken) {
+      // Update Redux
+      dispatch(setPass(true));
+      dispatch(setLoginData(result));
+
+      // Save Tokens
+      await storeData(Config.store_key_login_details, result.accessToken);
+      await storeData(Config.clientCode, LoginData?.user?.clientCode);
+
+      hideFingerprintModal();
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Profile" }],
+      });
+
+      return;
+    }
+
+    // FAILURE CASE
+    Alert.alert("Authentication Failed", "Please login normally.");
+    hideFingerprintModal();
+
+  } catch (error) {
+    console.error("Biometric verification error:", error);
+    Alert.alert("Error", "Failed to authenticate. Please login normally.");
+    hideFingerprintModal();
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -187,7 +244,7 @@ const BiometricLogin = () => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.headerContainer}>
-          <Text style={styles.subtitle}>Enter your MotiMoney PIN</Text>
+          <Text style={styles.subtitle}>Enter your MotiMoney MF PIN</Text>
         </View>
 
         <View style={styles.pinContainer}>

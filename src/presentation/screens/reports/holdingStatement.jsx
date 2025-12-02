@@ -16,6 +16,7 @@ import { Buffer } from 'buffer';
 import FileViewer from 'react-native-file-viewer';
 import { widthToDp, heightToDp } from '../../../helpers/Responsive';
 import { getData } from '../../../helpers/localStorage';
+import { baseUrl } from '../../../helpers/Config';
 
 const BackArrowIcon = () => (
   <View style={styles.backArrow}>
@@ -68,7 +69,7 @@ const HoldingsReportScreen = () => {
       const clientCode = await getData('token')
       setIsGenerating(true);
 
-      const response = await axios.get('https://onekyc.finovo.tech:8039/api/v1/pdf/xirr-Report', {
+      const response = await axios.get(`${baseUrl}/api/v1/pdf/xirr-Report`, {
         responseType: 'arraybuffer', 
         headers: {
           Accept: 'application/pdf',
